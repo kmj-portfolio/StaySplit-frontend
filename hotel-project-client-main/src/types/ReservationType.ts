@@ -1,38 +1,25 @@
-export type BookingStatus = 'CONFIRMED' | 'PENDING' | 'CANCELLED' | 'DONE';
+export type ReservationStatus =
+  | 'WAITING_PAYMENT'
+  | 'CONFIRMED'
+  | 'CANCELLED'
+  | 'EXPIRED'
+  | 'COMPLETE';
 
 // =========================================
-// Store 인터페이스
+// API Response 인터페이스 (ReservationListResponse)
 // =========================================
-
-export interface ReservationRoom {
-  reservationRoomId: number;
-  roomId: number;
-  roomType: string;
-  maxOccupancy: number;
-  quantity: number;
-  pricePerNight: number;
-  nights: number;
-  subtotalPrice: number;
-  roomDescription?: string;
-  participantCount: number;
-}
 
 export interface Reservation {
   reservationId: number;
-  userName: string;
   reservationNumber: string;
+  hotelName: string;
+  hotelMainImageUrl: string;
+  hotelAddress: string;
   checkInDate: string;
   checkOutDate: string;
-  reservationStatus: 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'DONE';
   totalPrice: number;
-  pricePaid: number;
-  createdAt: string;
-  hotelName: string;
-  hotelAddress: string;
-  hotelPhotos: string;
-  hotelCheckInTime: string;
-  hotelCheckOutTime: string;
-  rooms: ReservationRoom[];
+  reservationStatus: ReservationStatus;
+  numberOfParticipants: number;
 }
 
 export interface PageInfo {
@@ -71,23 +58,7 @@ export interface ReservationResponse {
 // =========================================
 
 export interface BookingStatusProps {
-  status: BookingStatus;
-}
-
-export interface DateDisplayProps {
-  date: string;
-  time: string;
-}
-
-export interface RoomInfoProps {
-  roomId: number;
-  roomType: string;
-}
-
-export interface GuestInfoProps {
-  userName: string;
-  quantity: number;
-  maxOccupancy: number;
+  status: ReservationStatus;
 }
 
 export interface HotelImageProps {
@@ -101,7 +72,6 @@ export interface HotelImageProps {
 
 export interface ReservationCardProps {
   booking: Reservation;
-  onDelete?: (bookingId: number) => void;
 }
 
 // =========================================

@@ -1,44 +1,41 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Download } from 'lucide-react';
 import TabNavigation from '@/component/common/Tab/TabNavigation';
 import ReservationCard from '@/component/mypage/reservation/ReservationCard';
 import { getReservationInfo } from '@/service/api/reservation';
 import { useReservationStore } from '@/stores/useReservationStore';
 import PaymentPage from '../payment/PaymentDetail';
 import { usePaymentStore } from '@/stores/usePaymentStore';
+import type { ReservationStatus } from '@/types/ReservationType';
+
+type TabLabel = '전체' | '결제 대기' | '예약 완료' | '이용 완료' | '예약 취소';
+
+const TAB_STATUS_MAP: Record<TabLabel, ReservationStatus | undefined> = {
+  전체: undefined,
+  '결제 대기': 'WAITING_PAYMENT',
+  '예약 완료': 'CONFIRMED',
+  '이용 완료': 'COMPLETE',
+  '예약 취소': 'CANCELLED',
+};
 
 const ReservationPage = () => {
   const { paymentModal, togglePayment } = usePaymentStore();
   const { reservations, setReservations } = useReservationStore();
-  const [activeTab, setActiveTab] = useState('전체');
+  const [activeTab, setActiveTab] = useState<TabLabel>('전체');
 
-  const tabs = ['전체', '결제 대기', '결제 완료', '리뷰 작성'];
-  const today = new Date();
+  const tabs: TabLabel[] = ['전체', '결제 대기', '예약 완료', '이용 완료', '예약 취소'];
 
   const handleTabChange = useCallback((tab: string) => {
-    setActiveTab(tab);
+    setActiveTab(tab as TabLabel);
   }, []);
-
-  const filteredBookings = reservations.filter((booking) => {
-    const status = booking.reservationStatus;
-    const checkOutDate = new Date(booking.checkOutDate.replace(/년|월/g, '-').replace(/일/g, ''));
-
-    if (activeTab === '전체') return true;
-    if (activeTab === '결제 대기') return status === 'PENDING';
-    if (activeTab === '결제 완료') return status === 'CONFIRMED';
-    if (activeTab === '리뷰 작성') {
-      return status === 'CONFIRMED' && checkOutDate < today;
-    }
-    return true;
-  });
 
   useEffect(() => {
     const fetchData = async () => {
-      const response = await getReservationInfo();
+      const status = TAB_STATUS_MAP[activeTab];
+      const response = await getReservationInfo({ status });
       setReservations(response);
     };
     fetchData();
-  }, []);
+  }, [activeTab]);
 
   return (
     <>
@@ -52,21 +49,18 @@ const ReservationPage = () => {
         </div>
       )}
       <div className="mb-8 flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <h1 className="text-3xl font-bold text-gray-800">예약 내역</h1>
-        </div>
-        <div className="flex items-center space-x-4">
-          <span className="text-gray-600">예약을 찾을 수 없으신가요?</span>
-          <Download className="h-5 w-5 text-gray-400" />
-        </div>
+        <h1 className="text-3xl font-bold text-gray-800">예약 내역</h1>
       </div>
       <TabNavigation tabs={tabs} activeTab={activeTab} onTabChange={handleTabChange} />
 
-      {/* 예약 카드 목록 */}
       <div className="space-y-6">
-        {filteredBookings.map((booking) => (
-          <ReservationCard booking={booking} key={booking.reservationId} />
-        ))}
+        {reservations.length === 0 ? (
+          <p className="py-12 text-center text-gray-400">예약 내역이 없습니다.</p>
+        ) : (
+          reservations.map((booking) => (
+            <ReservationCard booking={booking} key={booking.reservationId} />
+          ))
+        )}
       </div>
     </>
   );

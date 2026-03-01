@@ -101,18 +101,13 @@ export const useReservationStore = create<ReservationState>()(
         return get().reservations.filter((reservation) => reservation.reservationStatus === status);
       },
 
-      // 총 결제 완료 금액 계산
+      // 총 결제 금액 계산
       getTotalPaidAmount: () => {
-        return get().reservations.reduce((total, reservation) => total + reservation.pricePaid, 0);
+        return get().reservations.reduce((total, reservation) => total + reservation.totalPrice, 0);
       },
 
-      // 총 미결제 금액 계산
-      getTotalUnpaidAmount: () => {
-        return get().reservations.reduce(
-          (total, reservation) => total + (reservation.totalPrice - reservation.pricePaid),
-          0,
-        );
-      },
+      // 미사용 (하위 호환 유지)
+      getTotalUnpaidAmount: () => 0,
     }),
     {
       name: 'reservation-store',

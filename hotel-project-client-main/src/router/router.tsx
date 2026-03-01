@@ -18,6 +18,8 @@ import ProtectedRoute from './ProtectedRouter';
 import ReservationPage from '@/component/mypage/reservation/ReservationPage';
 import SettingsPage from '@/component/mypage/settings/SettingsPage';
 import SupportPage from '@/component/mypage/support/SupportPage';
+import LikePage from '@/component/mypage/like/LikePage';
+import ReviewsPage from '@/component/mypage/review/ReviewsPage';
 
 export const router = createBrowserRouter([
   {
@@ -96,6 +98,22 @@ export const router = createBrowserRouter([
             element: (
               <ProtectedRoute>
                 <SupportPage />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'like',
+            element: (
+              <ProtectedRoute>
+                <LikePage />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'reviews',
+            element: (
+              <ProtectedRoute>
+                <ReviewsPage />
               </ProtectedRoute>
             ),
           },
