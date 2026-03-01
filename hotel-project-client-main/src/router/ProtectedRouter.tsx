@@ -8,8 +8,8 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const navigate = useNavigate();
-  const { role, nickName } = useAuthStore();
-  const isAuthenticated = !!role && !!nickName;
+  const { role } = useAuthStore();
+  const isAuthenticated = !!role;
   useEffect(() => {
     if (!isAuthenticated) {
       navigate('/error', { replace: true });

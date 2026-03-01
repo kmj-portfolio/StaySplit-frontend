@@ -15,7 +15,7 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const handleCheckLoggedIn = async () => {
     try {
       const response = await handleApiReqeust<UserStatus>(() =>
-        client.get('/api/users/auth/status'),
+        client.get('/api/auth/status'),
       );
       setUserRole(response.role);
       setUserNickName(response.nickName);
@@ -27,7 +27,7 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     handleCheckLoggedIn();
-  }, [location.pathname, role]);
+  }, [location.pathname]);
 
   return <>{children}</>;
 };

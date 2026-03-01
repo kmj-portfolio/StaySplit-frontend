@@ -15,6 +15,11 @@ export interface UserStatus {
   loggedIn: boolean;
 }
 
+export interface LoginResponse {
+  accessToken: string;
+  role: UserRole;
+}
+
 export interface WarnResponse {
   code: string;
   data: string;

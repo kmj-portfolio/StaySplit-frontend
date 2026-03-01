@@ -5,7 +5,7 @@ import useAuthStore from '@/stores/useAuthStore';
 
 import { ArrowLeft } from 'lucide-react';
 
-import { login } from '@/service/api/auth';
+import { login, getAuthStatus } from '@/service/api/auth';
 import type { LoginType } from '@/schema/AuthSchema';
 
 import Logo from '@/assets/svg/Logo.svg';
@@ -35,9 +35,10 @@ const Header = () => {
 
   const onSubmit = async (data: LoginType) => {
     try {
-      const response = await login(data);
-      setUserRole(response.role);
-      setUserNickName(response.nickName);
+      const { role } = await login(data);
+      setUserRole(role);
+      const status = await getAuthStatus();
+      setUserNickName(status.nickName);
       setModal(false);
       navigate('/');
     } catch (err) {
