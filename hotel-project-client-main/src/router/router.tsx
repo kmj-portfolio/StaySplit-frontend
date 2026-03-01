@@ -1,12 +1,10 @@
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, Navigate } from 'react-router-dom';
 
 import Provider from '@/provider/Provider';
 import Layout from '@/layout/Layout';
 import HotelsPage from '@/component/hotels/HotelsPage';
 import HotelDetailPage from '@/component/hotel_detail/HotelDetailPage';
-
 import HomePage from '@/pages/HomePage';
-
 import SignUpPage from '@/pages/SignUpPage';
 import LoginFallbackPage from '@/pages/LoginFallbackPage';
 import SearchLayout, { searchLoader } from '@/layout/SearchLayout';
@@ -20,6 +18,13 @@ import SettingsPage from '@/component/mypage/settings/SettingsPage';
 import SupportPage from '@/component/mypage/support/SupportPage';
 import LikePage from '@/component/mypage/like/LikePage';
 import ReviewsPage from '@/component/mypage/review/ReviewsPage';
+import HotelManagePage from '@/component/mypage/hotel/HotelManagePage';
+import useAuthStore from '@/stores/useAuthStore';
+
+const MypageIndex = () => {
+  const { role } = useAuthStore();
+  return <Navigate to={role === 'ROLE_PROVIDER' ? '/mypage/hotel' : '/mypage/bookings'} replace />;
+};
 
 export const router = createBrowserRouter([
   {
@@ -70,6 +75,10 @@ export const router = createBrowserRouter([
         ),
         children: [
           {
+            index: true,
+            element: <MypageIndex />,
+          },
+          {
             path: 'payments',
             element: (
               <ProtectedRoute>
@@ -114,6 +123,14 @@ export const router = createBrowserRouter([
             element: (
               <ProtectedRoute>
                 <ReviewsPage />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'hotel',
+            element: (
+              <ProtectedRoute>
+                <HotelManagePage />
               </ProtectedRoute>
             ),
           },

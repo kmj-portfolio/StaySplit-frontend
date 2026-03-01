@@ -19,6 +19,34 @@ export interface Hotel {
   reviewCount: number;
 }
 
+export interface CreateHotelRequest {
+  name: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  description: string;
+  starLevel: number;
+}
+
+export interface UpdateHotelRequest {
+  name: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  description: string;
+  starLevel: number;
+}
+
+export interface CreateHotelResponse {
+  hotelId: number;
+  name: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  description: string;
+  starLevel: number;
+}
+
 export interface HotelItem {
   address: string;
   hotelId: number;

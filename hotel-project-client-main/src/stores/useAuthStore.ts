@@ -9,6 +9,8 @@ interface useAuthInterface {
   nickName: string | null;
   setUserNickName: (email: string) => void;
   removeUserNickName: () => void;
+  providerHotelId: number | null;
+  setProviderHotelId: (id: number | null) => void;
   setLogout: () => void;
 }
 
@@ -25,8 +27,10 @@ const useAuthStore = create<useAuthInterface>()(
       nickName: null,
       setUserNickName: (nickName) => set({ nickName }),
       removeUserNickName: () => set({ nickName: null }),
+      providerHotelId: null,
+      setProviderHotelId: (id) => set({ providerHotelId: id }),
       setLogout: () => {
-        set({ role: null, nickName: null });
+        set({ role: null, nickName: null, providerHotelId: null });
       },
     }),
     {

@@ -1,6 +1,6 @@
 import ProfileImage from '@/assets/png/profile-default.png';
 import useAuthStore from '@/stores/useAuthStore';
-import { profileMenuItems } from '@/types/common/menuItem';
+import { profileMenuItems, providerProfileMenuItems } from '@/types/common/menuItem';
 import { ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
@@ -10,7 +10,8 @@ const HeaderProfile = () => {
   const [profileMenuOpen, setProfileMenuOpen] = useState<boolean>(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
 
-  const { setLogout } = useAuthStore();
+  const { setLogout, role } = useAuthStore();
+  const menuItems = role === 'ROLE_PROVIDER' ? providerProfileMenuItems : profileMenuItems;
 
   const navigate = useNavigate();
 
@@ -62,7 +63,7 @@ const HeaderProfile = () => {
       {/* 드롭다운 메뉴 */}
       {profileMenuOpen && (
         <div className="absolute top-full right-0 z-50 mt-2 w-48 rounded-lg border border-gray-200 bg-white py-2 shadow-lg">
-          {profileMenuItems.map((item, index) => (
+          {menuItems.map((item, index) => (
             <button
               key={index}
               onClick={() => handleMenuClick(item.href)}

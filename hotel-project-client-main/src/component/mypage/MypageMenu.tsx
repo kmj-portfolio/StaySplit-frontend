@@ -2,12 +2,12 @@ import useAuthStore from '@/stores/useAuthStore';
 import { User } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { accountMenuItems, myInfoMenuItems } from '@/types/common/menuItem';
+import { accountMenuItems, myInfoMenuItems, providerMenuItems } from '@/types/common/menuItem';
 
 const MypageMenu = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { nickName } = useAuthStore();
+  const { nickName, role } = useAuthStore();
 
   const [isMyReservationOpen, setIsMyReservationOpen] = useState(true);
   const [isMyAccountOpen, setIsMyAccountOpen] = useState(true);
@@ -34,6 +34,43 @@ const MypageMenu = () => {
     //FIXME: 서버응답이 있을 때 만
     setNotifications(true);
   }, []);
+
+  const isProvider = role === 'ROLE_PROVIDER';
+
+  if (isProvider) {
+    return (
+      <div className="w-80 rounded-lg border-t border-gray-200 bg-white pt-2 shadow-sm">
+        <div className="p-6">
+          <div className="mb-8 flex items-center space-x-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500">
+              <User className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <span className="font-medium text-gray-800">{nickName}</span>
+              <p className="text-xs text-blue-500">사업자</p>
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <h3 className="mb-4 text-lg font-semibold text-gray-800">사업자 메뉴</h3>
+            {providerMenuItems.map((item, index) => (
+              <div
+                key={index}
+                onClick={() => handleMenuClick(item.href)}
+                className={`cursor-pointer rounded px-4 py-2.5 transition-colors ${
+                  isActive(item.href)
+                    ? 'border-l-4 border-blue-600 bg-blue-50 text-blue-600'
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                {item.name}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-80 rounded-lg border-t border-gray-200 bg-white pt-2 shadow-sm">
