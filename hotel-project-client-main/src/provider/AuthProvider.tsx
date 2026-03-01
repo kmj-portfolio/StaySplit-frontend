@@ -18,7 +18,6 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         client.get('/api/auth/status'),
       );
       setUserRole(response.role);
-      setUserNickName(response.nickName);
     } catch {
       setUserRole(null);
       setUserNickName('');
