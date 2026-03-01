@@ -6,6 +6,14 @@ export interface UserInfo {
   nickname: string;
 }
 
+export interface CustomerDetails {
+  id: number;
+  email: string;
+  name: string;
+  birthdate: string;
+  nickname: string;
+}
+
 export type UserRole = 'ROLE_PROVIDER' | 'ROLE_CUSTOMER' | null;
 
 export interface UserStatus {

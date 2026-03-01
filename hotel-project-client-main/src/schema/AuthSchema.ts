@@ -70,6 +70,24 @@ export const GeneralRegisterSchema = RegisterBaseSchema.extend({
   }
 });
 
+export const ChangePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, { message: '현재 비밀번호를 입력해주세요.' }),
+    newPassword: z.string().min(10, { message: '비밀번호는 최소 10자 이상이어야 합니다.' }),
+    newPasswordConfirm: z.string().min(10, { message: '비밀번호는 최소 10자 이상이어야 합니다.' }),
+  })
+  .superRefine((val, ctx) => {
+    if (val.newPassword !== val.newPasswordConfirm) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: '비밀번호가 일치하지 않습니다.',
+        path: ['newPasswordConfirm'],
+      });
+    }
+  });
+
+export type ChangePasswordType = z.infer<typeof ChangePasswordSchema>;
+
 export type LoginType = z.infer<typeof LoginSchema>;
 
 export type RegisterBaseType = z.infer<typeof RegisterBaseSchema>;
