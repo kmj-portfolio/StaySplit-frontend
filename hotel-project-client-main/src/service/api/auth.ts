@@ -51,6 +51,13 @@ export const updatePassword = async (data: Omit<ChangePasswordType, 'newPassword
   return response;
 };
 
+export const updateNickname = async (nickname: string) => {
+  const response = await handleApiReqeust<string>(() =>
+    client.put('/api/customers/nickname', { nickname }),
+  );
+  return response;
+};
+
 export const logout = async () => {
   await handleApiReqeust<UserRole>(() => client.post('/api/auth/logout'));
   setAccessToken(null);
