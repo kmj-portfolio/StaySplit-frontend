@@ -17,6 +17,7 @@ import ErrorPage from '@/pages/ErrorPage';
 import ProtectedRoute from './ProtectedRouter';
 import ReservationPage from '@/component/mypage/reservation/ReservationPage';
 import SettingsPage from '@/component/mypage/settings/SettingsPage';
+import SupportPage from '@/component/mypage/support/SupportPage';
 
 export const router = createBrowserRouter([
   {
@@ -87,6 +88,14 @@ export const router = createBrowserRouter([
             element: (
               <ProtectedRoute>
                 <SettingsPage />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'support',
+            element: (
+              <ProtectedRoute>
+                <SupportPage />
               </ProtectedRoute>
             ),
           },
