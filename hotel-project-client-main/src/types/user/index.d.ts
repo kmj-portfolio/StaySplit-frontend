@@ -18,7 +18,6 @@ export type UserRole = 'ROLE_PROVIDER' | 'ROLE_CUSTOMER' | null;
 
 export interface UserStatus {
   email: string;
-  nickName: string;
   role: UserRole;
   loggedIn: boolean;
 }
