@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import buildSearchQuery from '@/utils/buildSearchQuery';
 import getCoordsByAddress from '@/service/api/geocorder/getCoordsByAddress';
 import { formatDateToISOstring } from '@/utils/format/formatUtil';
+import { useState } from 'react';
 
 interface SearchFormProps {
   location?: string;
@@ -25,6 +26,7 @@ export interface DateRange {
 
 const SearchForm = ({ location, checkInDate, checkOutDate, guestCount }: SearchFormProps) => {
   const navigate = useNavigate();
+  const [geoError, setGeoError] = useState('');
 
   const { control, handleSubmit } = useForm({
     resolver: zodResolver(SearchSchema),
@@ -40,18 +42,24 @@ const SearchForm = ({ location, checkInDate, checkOutDate, guestCount }: SearchF
   });
 
   const onSubmit = async (data: SearchType) => {
-    // 주소 -> 좌표 변환
-    const { lat, lon } = await getCoordsByAddress(data.location);
-
-    const queryString = buildSearchQuery({ ...data, lat, lon });
-    navigate(`/search?${queryString}`);
+    setGeoError('');
+    try {
+      const { lat, lon } = await getCoordsByAddress(data.location);
+      navigate(`/search?${buildSearchQuery({ ...data, lat, lon })}`);
+    } catch {
+      setGeoError(`"${data.location}"의 위치를 찾을 수 없습니다. 다른 지역명을 입력해주세요.`);
+    }
   };
 
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="bg-gray-primary/30 md:bg-gray-primary/60 mb-4 flex w-full flex-col space-y-2.5 rounded-2xl p-4 md:flex-row md:gap-2 md:space-y-0"
+      className="mb-4 w-full"
     >
+      {geoError && (
+        <p className="mb-2 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600">{geoError}</p>
+      )}
+      <div className="bg-gray-primary/30 md:bg-gray-primary/60 flex w-full flex-col space-y-2.5 rounded-2xl p-4 md:flex-row md:gap-2 md:space-y-0">
       <LocationInput name="location" control={control} />
       <DateInput checkInName="checkInDate" checkOutName="checkOutDate" control={control} />
       <PersonnelInput name="guestCount" control={control} />
@@ -61,6 +69,7 @@ const SearchForm = ({ location, checkInDate, checkOutDate, guestCount }: SearchF
           <Search />
         </span>
       </PrimaryButton>
+      </div>
     </form>
   );
 };

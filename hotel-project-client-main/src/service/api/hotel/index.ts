@@ -20,9 +20,20 @@ export const getHotelDetail = async (hotelId: number) => {
   return (await client.get(`/hotels/${hotelId}`)).data;
 };
 
-export const getSearchHotels = async (searchQuery: string) => {
+export interface HotelSearchBody {
+  checkIn: string;
+  checkOut: string;
+  latitude: number;
+  longitude: number;
+  numGuest: number;
+  minPrice: number;
+  maxPrice: number;
+  numStar: number;
+}
+
+export const getSearchHotels = async (body: HotelSearchBody, page: number, size: number) => {
   const response = await handleApiReqeust<PaginationResult<HotelItem>>(() =>
-    client.get(`/api/hotels/search?${searchQuery}`),
+    client.post(`/api/hotels/search`, body, { params: { page, size } }),
   );
   return response;
 };
