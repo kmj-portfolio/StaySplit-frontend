@@ -16,6 +16,8 @@ interface useAuthInterface {
   setHasHydrated: (state: boolean) => void;
   isTokenRestored: boolean;
   setTokenRestored: () => void;
+  loginModalOpen: boolean;
+  setLoginModalOpen: (open: boolean) => void;
 }
 
 const useAuthStore = create<useAuthInterface>()(
@@ -40,6 +42,8 @@ const useAuthStore = create<useAuthInterface>()(
       setHasHydrated: (state) => set({ _hasHydrated: state }),
       isTokenRestored: false,
       setTokenRestored: () => set({ isTokenRestored: true }),
+      loginModalOpen: false,
+      setLoginModalOpen: (open) => set({ loginModalOpen: open }),
     }),
     {
       name: 'user-info',

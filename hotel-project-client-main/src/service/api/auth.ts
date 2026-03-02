@@ -68,6 +68,13 @@ export const logout = async () => {
   setAccessToken(null);
 };
 
+export const getUsernameAutocomplete = async (prefix: string): Promise<string[]> => {
+  const response = await client.get<string[]>('/api/autocomplete/username', {
+    params: { prefix },
+  });
+  return response.data;
+};
+
 export const oAuthLogin = async (identifier: oAuthIdentity, code: string) => {
   const response = await handleApiReqeust<WarnResponse>(() =>
     client.post(`/api/customers/${identifier}/login`, { code }),

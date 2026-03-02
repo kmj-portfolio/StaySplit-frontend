@@ -19,6 +19,7 @@ import SupportPage from '@/component/mypage/support/SupportPage';
 import LikePage from '@/component/mypage/like/LikePage';
 import ReviewsPage from '@/component/mypage/review/ReviewsPage';
 import HotelManagePage from '@/component/mypage/hotel/HotelManagePage';
+import BookingPage from '@/component/booking/BookingPage';
 import useAuthStore from '@/stores/useAuthStore';
 
 const MypageIndex = () => {
@@ -65,6 +66,10 @@ export const router = createBrowserRouter([
       {
         path: 'hotels/:hotelId',
         element: <HotelDetailPage />,
+      },
+      {
+        path: 'booking',
+        element: <BookingPage />,
       },
       {
         path: 'mypage',

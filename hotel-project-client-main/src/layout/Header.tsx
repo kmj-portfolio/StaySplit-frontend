@@ -17,7 +17,7 @@ import { PrimaryButton } from '@/component/common/button/PrimaryButton';
 import HeaderProfile from '@/layout/HeaderProfile';
 
 const Header = () => {
-  const { setUserRole, role, setUserNickName } = useAuthStore();
+  const { setUserRole, role, setUserNickName, loginModalOpen, setLoginModalOpen } = useAuthStore();
 
   const [modal, setModal] = useState<boolean>(false);
   const [formError, setFormError] = useState<string>();
@@ -28,6 +28,13 @@ const Header = () => {
   useEffect(() => {
     setModal(false);
   }, [location.pathname]);
+
+  useEffect(() => {
+    if (loginModalOpen) {
+      setModal(true);
+      setLoginModalOpen(false);
+    }
+  }, [loginModalOpen, setLoginModalOpen]);
 
   const handleToggleModal = () => {
     setModal((prev) => !prev);
