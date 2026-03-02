@@ -45,7 +45,7 @@ const Header = () => {
         setUserNickName(details.nickname);
       }
       setModal(false);
-      navigate('/');
+      navigate(role === 'ROLE_PROVIDER' ? '/mypage/hotel' : '/');
     } catch (err) {
       setFormError(err as string);
     }
