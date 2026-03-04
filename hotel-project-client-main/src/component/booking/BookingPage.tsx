@@ -17,7 +17,24 @@ interface BookingState {
   checkOut: string;
 }
 
+interface ReservationResult {
+  reservationId: number;
+  reservationNumber: string;
+}
+
 type PaymentMode = 'solo' | 'split';
+
+declare global {
+  interface Window {
+    IMP?: {
+      init: (merchantUid: string) => void;
+      request_pay: (
+        params: object,
+        callback: (rsp: { success: boolean; imp_uid: string; merchant_uid: string; error_msg?: string }) => void,
+      ) => void;
+    };
+  }
+}
 
 const toProxiedUrl = (url?: string) => {
   if (!url) return undefined;
@@ -48,6 +65,7 @@ const BookingPage = () => {
   const [error, setError] = useState<string>();
   const [participantError, setParticipantError] = useState<string>();
   const [autocompleteError, setAutocompleteError] = useState<string>();
+  const [confirmation, setConfirmation] = useState<ReservationResult>();
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -161,6 +179,36 @@ const BookingPage = () => {
   const myPrice =
     paymentMode === 'split' ? Math.ceil(totalPrice / participantCount) : totalPrice;
 
+  const openIamportPayment = (reservationNumber: string, amount: number) => {
+    const merchantUid = import.meta.env.VITE_IMP_MERCHANT_UID;
+    if (!merchantUid || !window.IMP) {
+      setError('결제 모듈이 준비되지 않았습니다. 관리자에게 문의해 주세요.');
+      setSubmitting(false);
+      return;
+    }
+
+    window.IMP.init(merchantUid);
+    window.IMP.request_pay(
+      {
+        pg: import.meta.env.VITE_IMP_PG ?? 'html5_inicis',
+        pay_method: 'card',
+        merchant_uid: reservationNumber,
+        name: `${hotelName} - ${room.roomType}`,
+        amount,
+        buyer_email: customer?.email,
+        buyer_name: customer?.name,
+      },
+      (rsp) => {
+        if (rsp.success) {
+          navigate('/mypage/bookings');
+        } else {
+          setError(rsp.error_msg ?? '결제에 실패했습니다.');
+          setSubmitting(false);
+        }
+      },
+    );
+  };
+
   const handleSubmit = async () => {
     if (!checkIn || !checkOut) {
       setError('체크인 및 체크아웃 날짜를 선택해 주세요.');
@@ -178,7 +226,7 @@ const BookingPage = () => {
     setSubmitting(true);
     setError(undefined);
     try {
-      await createReservation({
+      const reservation = await createReservation({
         hotelId,
         roomsAndQuantities: [{ roomId: room.roomId, quantity: 1 }],
         checkInDate: checkIn,
@@ -186,12 +234,106 @@ const BookingPage = () => {
         invitedEmails,
         isSplitPayment: paymentMode === 'split',
       });
-      navigate('/mypage/bookings');
+
+      if (paymentMode === 'split') {
+        setConfirmation(reservation);
+        setSubmitting(false);
+      } else {
+        openIamportPayment(reservation.reservationNumber, myPrice);
+      }
     } catch (err) {
       setError(String(err));
       setSubmitting(false);
     }
   };
+
+  // ── Split payment confirmation modal ──
+  if (confirmation && paymentMode === 'split') {
+    return (
+      <div className="mx-auto max-w-lg px-6 py-16">
+        <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
+          {/* Header */}
+          <div className="mb-6 flex flex-col items-center text-center">
+            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary-100">
+              <svg className="h-8 w-8 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h2 className="text-xl font-bold text-gray-900">임시 예약이 완료되었습니다</h2>
+            <p className="mt-1 text-sm text-gray-500">
+              예약 번호:{' '}
+              <span className="font-semibold text-gray-800">{confirmation.reservationNumber}</span>
+            </p>
+          </div>
+
+          {/* Summary */}
+          <div className="mb-6 flex flex-col gap-3 rounded-xl bg-gray-50 p-4 text-sm">
+            <div className="flex justify-between">
+              <span className="text-gray-500">숙소</span>
+              <span className="font-medium text-gray-900">{hotelName}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-500">객실</span>
+              <span className="font-medium text-gray-900">{room.roomType}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-500">체크인</span>
+              <span className="font-medium text-gray-900">{checkIn}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-500">체크아웃</span>
+              <span className="font-medium text-gray-900">{checkOut}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-500">참여자</span>
+              <span className="font-medium text-gray-900">
+                {[customer?.nickname ?? '나', ...invitedEmails].join(', ')}
+              </span>
+            </div>
+            <div className="flex justify-between border-t border-gray-200 pt-3">
+              <span className="text-gray-500">총 요금</span>
+              <span className="font-semibold text-gray-900">₩{formatNumberWithComma(totalPrice)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="font-semibold text-primary-600">내가 낼 금액</span>
+              <span className="font-bold text-primary-600">₩{formatNumberWithComma(myPrice)}</span>
+            </div>
+          </div>
+
+          {/* 30-min warning */}
+          <div className="mb-6 flex items-start gap-2 rounded-lg bg-amber-50 px-4 py-3 text-xs text-amber-700">
+            <svg className="mt-0.5 h-4 w-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                fillRule="evenodd"
+                d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                clipRule="evenodd"
+              />
+            </svg>
+            <span>
+              <strong>30분</strong> 내에 모든 참여자가 결제를 완료해야 합니다. 시간 내 미결제 시
+              예약이 자동으로 취소됩니다.
+            </span>
+          </div>
+
+          {/* Actions */}
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={() => openIamportPayment(confirmation.reservationNumber, myPrice)}
+              className="w-full rounded-xl bg-primary-700 py-4 text-base font-bold text-white hover:bg-primary-800"
+            >
+              내 몫 결제하기 (₩{formatNumberWithComma(myPrice)})
+            </button>
+            <button
+              onClick={() => navigate('/mypage/bookings')}
+              className="w-full rounded-xl border border-gray-200 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            >
+              나중에 결제하기
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-10">
@@ -202,12 +344,7 @@ const BookingPage = () => {
           className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 text-gray-500 hover:bg-gray-50"
         >
           <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 19l-7-7 7-7"
-            />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
         <h1 className="text-2xl font-bold text-gray-900">예약 확인</h1>
@@ -223,11 +360,7 @@ const BookingPage = () => {
             </p>
             <h2 className="text-xl font-bold text-gray-900">{hotelName}</h2>
             <p className="mt-1 flex items-center gap-1 text-sm text-gray-500">
-              <svg
-                className="h-4 w-4 shrink-0 text-primary-500"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
+              <svg className="h-4 w-4 shrink-0 text-primary-500" fill="currentColor" viewBox="0 0 20 20">
                 <path
                   fillRule="evenodd"
                   d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
@@ -246,18 +379,8 @@ const BookingPage = () => {
               </div>
             ) : (
               <div className="flex h-52 items-center justify-center bg-primary-100">
-                <svg
-                  className="h-12 w-12 text-primary-300"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"
-                  />
+                <svg className="h-12 w-12 text-primary-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
                 </svg>
               </div>
             )}
@@ -268,9 +391,7 @@ const BookingPage = () => {
                   <p className="mt-0.5 text-sm text-gray-400">최대 {room.maxOccupancy}인</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-lg font-bold text-gray-900">
-                    ₩{formatNumberWithComma(room.price)}
-                  </p>
+                  <p className="text-lg font-bold text-gray-900">₩{formatNumberWithComma(room.price)}</p>
                   <p className="text-xs text-gray-400">1박 기준</p>
                 </div>
               </div>
@@ -320,7 +441,6 @@ const BookingPage = () => {
               참여자를 추가하면 비용을 함께 나눌 수 있습니다.
             </p>
 
-            {/* Added email tags */}
             {invitedEmails.length > 0 && (
               <div className="mb-3 flex flex-wrap gap-2">
                 {invitedEmails.map((email) => (
@@ -334,12 +454,7 @@ const BookingPage = () => {
                       className="flex h-4 w-4 items-center justify-center rounded-full hover:bg-primary-200"
                     >
                       <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2.5}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
                       </svg>
                     </button>
                   </span>
@@ -347,7 +462,6 @@ const BookingPage = () => {
               </div>
             )}
 
-            {/* Autocomplete input */}
             <div className="relative" ref={dropdownRef}>
               <div className="flex gap-2">
                 <input
@@ -380,7 +494,6 @@ const BookingPage = () => {
                 <p className="mt-1.5 text-xs text-red-400">검색 실패: {autocompleteError}</p>
               )}
 
-              {/* Dropdown */}
               {showDropdown && (
                 <div className="absolute z-10 mt-1 w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg">
                   {suggestions.length > 0 ? (
@@ -411,7 +524,6 @@ const BookingPage = () => {
           <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
             <h3 className="mb-3 font-semibold text-gray-900">결제 방식</h3>
             <div className="flex flex-col gap-2">
-              {/* Solo */}
               <button
                 onClick={() => setPaymentMode('solo')}
                 className={`flex items-start gap-3 rounded-lg border-2 p-4 text-left transition-colors ${
@@ -425,9 +537,7 @@ const BookingPage = () => {
                     paymentMode === 'solo' ? 'border-primary-500' : 'border-gray-300'
                   }`}
                 >
-                  {paymentMode === 'solo' && (
-                    <span className="h-2 w-2 rounded-full bg-primary-500" />
-                  )}
+                  {paymentMode === 'solo' && <span className="h-2 w-2 rounded-full bg-primary-500" />}
                 </span>
                 <div>
                   <p className="text-sm font-semibold text-gray-900">혼자 결제하기</p>
@@ -435,7 +545,6 @@ const BookingPage = () => {
                 </div>
               </button>
 
-              {/* Split */}
               <button
                 onClick={() => invitedEmails.length > 0 && setPaymentMode('split')}
                 disabled={invitedEmails.length === 0}
@@ -452,9 +561,7 @@ const BookingPage = () => {
                     paymentMode === 'split' ? 'border-primary-500' : 'border-gray-300'
                   }`}
                 >
-                  {paymentMode === 'split' && (
-                    <span className="h-2 w-2 rounded-full bg-primary-500" />
-                  )}
+                  {paymentMode === 'split' && <span className="h-2 w-2 rounded-full bg-primary-500" />}
                 </span>
                 <div>
                   <p className="text-sm font-semibold text-gray-900">나누어 결제하기</p>
@@ -509,9 +616,7 @@ const BookingPage = () => {
             <div className="flex flex-col gap-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-gray-500">객실 요금</span>
-                <span className="text-gray-900">
-                  ₩{formatNumberWithComma(room.price)} / 1박
-                </span>
+                <span className="text-gray-900">₩{formatNumberWithComma(room.price)} / 1박</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">숙박 일수</span>

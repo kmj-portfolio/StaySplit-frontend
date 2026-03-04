@@ -1,5 +1,5 @@
 import handleApiReqeust from '@/service/api/handleApiReqeust';
-import { getHotels } from '@/service/api/hotel';
+import { getHotels } from '@/service/api/hotel/index';
 import type { Hotel } from '@/types/hotel';
 import type { PaginationResult } from '@/types/pageable';
 import { useState } from 'react';

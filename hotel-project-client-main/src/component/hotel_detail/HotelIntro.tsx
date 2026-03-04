@@ -2,6 +2,7 @@ import star from '@/assets/svg/star.svg';
 import halfStar from '@/assets/svg/harf-star-left.svg';
 import type { HotelDetail } from '@/types/hotel';
 import getStarRating from '@/utils/rating/getStarRating';
+import { Heart } from 'lucide-react';
 
 const toProxiedUrl = (url?: string) => {
   if (!url) return undefined;
@@ -20,7 +21,13 @@ const ratingLabel = (rating: number) => {
   return '평가됨';
 };
 
-const HotelIntro = ({ hotelDetail }: { hotelDetail: HotelDetail }) => {
+const HotelIntro = ({
+  hotelDetail,
+  onLike,
+}: {
+  hotelDetail: HotelDetail;
+  onLike?: () => void;
+}) => {
   const mainImageUrl = toProxiedUrl(hotelDetail.mainPhotoUrl);
   const additionalUrls = (hotelDetail.additionalPhotoUrls ?? [])
     .slice(0, 2)
@@ -31,6 +38,19 @@ const HotelIntro = ({ hotelDetail }: { hotelDetail: HotelDetail }) => {
 
   return (
     <div>
+      {/* ── Like button ── */}
+      {onLike && (
+        <div className="mb-3 flex justify-end">
+          <button
+            onClick={onLike}
+            className="group flex items-center gap-2 rounded-xl border border-rose-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition-colors hover:border-rose-400 hover:bg-rose-50 hover:text-rose-600 active:bg-rose-100"
+          >
+            <Heart className="h-4 w-4 fill-rose-500 stroke-rose-500 transition-transform group-hover:scale-110" />
+            좋아요 목록에 추가하기
+          </button>
+        </div>
+      )}
+
       {/* ── Photo Gallery ── */}
       {mainImageUrl && (
         <div className="flex h-[300px] gap-2 overflow-hidden rounded-2xl">
