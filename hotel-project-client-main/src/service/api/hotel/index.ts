@@ -13,11 +13,11 @@ export const getHotels = async ({
   page: number;
   sort: string;
 }) => {
-  return (await client.get(`api/hotels/list?page=${page}&size=${size}&sort=${sort}`)).data;
+  return (await client.get(`/api/hotels/list?page=${page}&size=${size}&sort=${sort}`)).data;
 };
 
 export const getHotelDetail = async (hotelId: number) => {
-  return (await client.get(`/hotels/${hotelId}`)).data;
+  return (await client.get(`/api/hotels/${hotelId}`)).data;
 };
 
 export interface HotelSearchBody {
