@@ -47,9 +47,15 @@ export interface CreateLikeListResponse {
 
 // ─── API functions ────────────────────────────────────────────────────────────
 
+interface PageResult<T> {
+  content: T[];
+}
+
 /** My like lists (owned + participating) */
-export const getMyLikeLists = async () =>
-  handleApiReqeust<LikeListSummary[]>(() => client.get('/api/likes/my'));
+export const getMyLikeLists = async (): Promise<LikeListSummary[]> => {
+  const data = await handleApiReqeust<PageResult<LikeListSummary>>(() => client.get('/api/likes/my'));
+  return data.content;
+};
 
 /** Full detail of one list (hotels + participants) */
 export const getLikeListDetail = async (listId: number) =>
@@ -72,36 +78,27 @@ export const deleteLikeList = async (listId: number) =>
   handleApiReqeust<string>(() => client.delete(`/api/likes/${listId}`));
 
 /** Add hotel to list – hotelId in path, no request body */
-export const addHotelToLikeList = async (listId: number, hotelId: number) => {
-  try {
-    return await handleApiReqeust<unknown>(() =>
-      client.post(`/api/like-lists/${listId}/hotels/${hotelId}`),
-    );
-  } catch (error) {
-    // Guard against residual serialization 500s from the backend
-    if (axios.isAxiosError(error) && error.response?.status === 500) {
-      return;
-    }
-    throw error;
-  }
-};
+export const addHotelToLikeList = async (listId: number, hotelId: number) =>
+  handleApiReqeust<unknown>(() =>
+    client.post(`/api/likes/${listId}/hotels/${hotelId}`),
+  );
 
 /** Remove hotel from list */
 export const removeHotelFromLikeList = async (listId: number, hotelId: number) =>
   handleApiReqeust<unknown>(() =>
-    client.delete(`/api/like-lists/${listId}/hotels/${hotelId}`),
+    client.delete(`/api/likes/${listId}/hotels/${hotelId}`),
   );
 
 /** Invite participant by email (owner only) */
 export const addParticipant = async (listId: number, invitedEmail: string) =>
   handleApiReqeust<string>(() =>
-    client.post(`/api/like-lists/${listId}/owners/participants`, { invitedEmail }),
+    client.post(`/api/likes/${listId}/owners/participants`, { invitedEmail }),
   );
 
 /** Remove participant by email (owner only) */
 export const removeParticipant = async (listId: number, invitedEmail: string) =>
   handleApiReqeust<string>(() =>
-    client.delete(`/api/like-lists/${listId}/owners/participants`, {
+    client.delete(`/api/likes/${listId}/owners/participants`, {
       data: { invitedEmail },
     }),
   );
@@ -109,5 +106,5 @@ export const removeParticipant = async (listId: number, invitedEmail: string) =>
 /** Leave a list you were invited to (participant only) */
 export const leaveList = async (listId: number) =>
   handleApiReqeust<string>(() =>
-    client.delete(`/api/like-lists/${listId}/participants`),
+    client.delete(`/api/likes/${listId}/participants`),
   );
