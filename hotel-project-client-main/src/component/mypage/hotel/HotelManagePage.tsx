@@ -17,6 +17,7 @@ import {
   deleteRoom,
   uploadHotelPhoto,
   uploadRoomPhoto,
+  uploadRoomPhotos,
   deletePhoto,
 } from '@/service/api/hotelManage';
 import { getAllHotels } from '@/service/api/hotel';
@@ -271,9 +272,8 @@ const RoomPhotoModal = ({ room, onClose, onUpdate }: RoomPhotoModalProps) => {
     setUploading(true);
     setError('');
     try {
-      const results = await Promise.all(
-        files.map((file) => uploadRoomPhoto(room.roomId, file, 'ADDITIONAL')),
-      );
+      const displayTypes = files.map(() => 'ADDITIONAL' as const);
+      const results = await uploadRoomPhotos(room.roomId, files, displayTypes);
       const newUrls = results.map((r) => `/api/photos/${r.savedFileName}`);
       const updated = [...additionalUrls, ...newUrls];
       setAdditionalUrls(updated);

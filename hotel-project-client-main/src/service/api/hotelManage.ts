@@ -89,6 +89,25 @@ export const uploadRoomPhoto = async (
   return response;
 };
 
+export const uploadRoomPhotos = async (
+  roomId: number,
+  files: File[],
+  displayTypes: ('MAIN' | 'ADDITIONAL')[],
+) => {
+  const formData = new FormData();
+  files.forEach((file) => formData.append('files', file));
+  const params = new URLSearchParams();
+  params.append('entityType', 'ROOM');
+  params.append('entityId', String(roomId));
+  displayTypes.forEach((dt) => params.append('displayType', dt));
+  const response = await handleApiReqeust<PhotoDetailResponse[]>(() =>
+    client.post(`/api/photos/list?${params.toString()}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+  );
+  return response;
+};
+
 export const deletePhoto = async (filename: string) => {
   await handleApiReqeust<string>(() => client.delete(`/api/photos/${filename}`));
 };
