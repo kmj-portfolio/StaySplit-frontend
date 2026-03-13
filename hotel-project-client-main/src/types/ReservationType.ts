@@ -79,6 +79,7 @@ export interface HotelImageProps {
 
 export interface ReservationCardProps {
   booking: Reservation;
+  onPaymentComplete?: () => void;
 }
 
 // =========================================

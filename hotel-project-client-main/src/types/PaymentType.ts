@@ -1,42 +1,34 @@
-export interface PaymentList {
-  content: Payment[];
-  pageable: PageInfo;
-  last: boolean;
-  totalPages: number;
+export type PaymentStatus = 'PAID' | 'FAILED' | 'CANCELLED';
+
+export interface PaymentResponse {
+  portOnePaymentId: string;
+  paymentAmount: number;
+  payMethod: string;
+  cardPublisher?: string;
+  reservationId: number;
+  reservationNumber: string;
+  status: PaymentStatus;
+  paidAt: string;
+}
+
+export interface PaymentListResponse {
+  content: PaymentResponse[];
   totalElements: number;
-  first: boolean;
+  totalPages: number;
   size: number;
   number: number;
-  sort: {
-    empty: boolean;
-    sorted: boolean;
-    unsorted: boolean;
-  };
+  first: boolean;
+  last: boolean;
   numberOfElements: number;
   empty: boolean;
 }
 
-export interface Payment {
-  paymentId: number;
-  status: PaymentState;
-  paidAt: string;
-  amount: number;
-  method: string;
-  payName: string;
+export interface CreatePaymentRequest {
+  portOnePaymentId: string;
   reservationId: number;
 }
 
-export type PaymentState = 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'DONE';
-
-export interface PageInfo {
-  pageNumber: number;
-  pageSize: number;
-  sort: {
-    empty: boolean;
-    sorted: boolean;
-    unsorted: boolean;
-  };
-  offset: number;
-  paged: boolean;
-  unpaged: boolean;
+export interface CancelPaymentRequest {
+  portOnePaymentId: string;
+  reason: string;
 }

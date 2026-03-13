@@ -1,17 +1,24 @@
 import client from '../instance/client';
 import handleApiReqeust from './handleApiReqeust';
-import type { Payment, PaymentList } from '@/types/PaymentType';
+import type {
+  CreatePaymentRequest,
+  CancelPaymentRequest,
+  PaymentListResponse,
+  PaymentResponse,
+} from '@/types/PaymentType';
 
-export const getPaymentsByCustomerId = async (customerId: number) => {
-  const response = await handleApiReqeust<PaymentList>(() =>
-    client.get(`/api/payments/customers/${customerId}`),
+export const getMyPayments = async (page = 0, size = 20) => {
+  return await handleApiReqeust<PaymentListResponse>(() =>
+    client.get('/api/payments/my', { params: { page, size } }),
   );
-  return response;
 };
 
-export const getPaymentsByReservationId = async (reservationId: number) => {
-  const response = await handleApiReqeust<Payment>(() =>
-    client.get(`/api/payments/reservations/${reservationId}`),
+export const verifyPayment = async (data: CreatePaymentRequest) => {
+  return await handleApiReqeust<PaymentResponse>(() =>
+    client.post('/api/payments/verify', data),
   );
-  return response;
+};
+
+export const cancelPayment = async (data: CancelPaymentRequest) => {
+  return await handleApiReqeust<string>(() => client.post('/api/payments/cancel', data));
 };

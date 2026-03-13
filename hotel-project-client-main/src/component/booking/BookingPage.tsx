@@ -1,8 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import * as PortOne from '@portone/browser-sdk/v2';
+import { DayPicker } from 'react-day-picker';
+import type { DateRange } from 'react-day-picker';
+import 'react-day-picker/style.css';
 
 import { getCustomerDetails, getUsernameAutocomplete } from '@/service/api/auth';
-import { createReservation } from '@/service/api/reservation';
+import { createReservation, confirmReservation } from '@/service/api/reservation';
+import { verifyPayment } from '@/service/api/payment';
 import { formatNumberWithComma, formatDateToISOstring } from '@/utils/format/formatUtil';
 
 import type { RoomInfo } from '@/types/room/room';
@@ -24,17 +29,6 @@ interface ReservationResult {
 
 type PaymentMode = 'solo' | 'split';
 
-declare global {
-  interface Window {
-    IMP?: {
-      init: (merchantUid: string) => void;
-      request_pay: (
-        params: object,
-        callback: (rsp: { success: boolean; imp_uid: string; merchant_uid: string; error_msg?: string }) => void,
-      ) => void;
-    };
-  }
-}
 
 const today = formatDateToISOstring(new Date());
 
@@ -54,11 +48,14 @@ const BookingPage = () => {
   const [paymentMode, setPaymentMode] = useState<PaymentMode>('solo');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string>();
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [participantError, setParticipantError] = useState<string>();
   const [autocompleteError, setAutocompleteError] = useState<string>();
   const [confirmation, setConfirmation] = useState<ReservationResult>();
 
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const calendarRef = useRef<HTMLDivElement>(null);
+  const [showCalendar, setShowCalendar] = useState(false);
 
   useEffect(() => {
     getCustomerDetails()
@@ -78,6 +75,9 @@ const BookingPage = () => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setShowDropdown(false);
         setNoResults(false);
+      }
+      if (calendarRef.current && !calendarRef.current.contains(e.target as Node)) {
+        setShowCalendar(false);
       }
     };
     document.addEventListener('mousedown', handler);
@@ -170,34 +170,45 @@ const BookingPage = () => {
   const myPrice =
     paymentMode === 'split' ? Math.ceil(totalPrice / participantCount) : totalPrice;
 
-  const openIamportPayment = (reservationNumber: string, amount: number) => {
-    const merchantUid = import.meta.env.VITE_IMP_MERCHANT_UID;
-    if (!merchantUid || !window.IMP) {
+  const openPortonePayment = async (reservationId: number, reservationNumber: string, amount: number) => {
+    const storeId = import.meta.env.VITE_PORTONE_STORE_ID;
+    const channelKey = import.meta.env.VITE_PORTONE_CHANNEL_KEY;
+    if (!storeId || !channelKey) {
       setError('결제 모듈이 준비되지 않았습니다. 관리자에게 문의해 주세요.');
       setSubmitting(false);
       return;
     }
 
-    window.IMP.init(merchantUid);
-    window.IMP.request_pay(
-      {
-        pg: import.meta.env.VITE_IMP_PG ?? 'html5_inicis',
-        pay_method: 'card',
-        merchant_uid: reservationNumber,
-        name: `${hotelName} - ${room.roomType}`,
-        amount,
-        buyer_email: customer?.email,
-        buyer_name: customer?.name,
+    const paymentId = `payment-${reservationNumber}-${Date.now()}`;
+    const response = await PortOne.requestPayment({
+      storeId,
+      channelKey,
+      paymentId,
+      orderName: `${hotelName} - ${room.roomType}`,
+      totalAmount: amount,
+      currency: 'KRW',
+      payMethod: 'CARD',
+      customer: {
+        fullName: customer?.name,
+        email: customer?.email,
+        phoneNumber: phoneNumber || undefined,
       },
-      (rsp) => {
-        if (rsp.success) {
-          navigate('/mypage/bookings');
-        } else {
-          setError(rsp.error_msg ?? '결제에 실패했습니다.');
-          setSubmitting(false);
-        }
-      },
-    );
+    });
+
+    if (response?.code !== undefined) {
+      setError(response.message ?? '결제에 실패했습니다.');
+      setSubmitting(false);
+      return;
+    }
+
+    try {
+      await verifyPayment({ portOnePaymentId: paymentId, reservationId });
+      await confirmReservation(reservationId);
+      navigate('/mypage/bookings');
+    } catch (err) {
+      setError(String(err));
+      setSubmitting(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -211,6 +222,10 @@ const BookingPage = () => {
     }
     if (paymentMode === 'split' && invitedEmails.length === 0) {
       setError('나누어 결제하려면 참여자를 한 명 이상 추가해 주세요.');
+      return;
+    }
+    if (!phoneNumber || phoneNumber.length < 10) {
+      setError('휴대폰 번호를 올바르게 입력해 주세요.');
       return;
     }
 
@@ -230,7 +245,7 @@ const BookingPage = () => {
         setConfirmation(reservation);
         setSubmitting(false);
       } else {
-        openIamportPayment(reservation.reservationNumber, myPrice);
+        await openPortonePayment(reservation.reservationId, reservation.reservationNumber, myPrice);
       }
     } catch (err) {
       setError(String(err));
@@ -309,7 +324,7 @@ const BookingPage = () => {
           {/* Actions */}
           <div className="flex flex-col gap-3">
             <button
-              onClick={() => openIamportPayment(confirmation.reservationNumber, myPrice)}
+              onClick={() => openPortonePayment(confirmation.reservationId, confirmation.reservationNumber, myPrice)}
               className="w-full rounded-xl bg-primary-700 py-4 text-base font-bold text-white hover:bg-primary-800"
             >
               내 몫 결제하기 (₩{formatNumberWithComma(myPrice)})
@@ -396,33 +411,58 @@ const BookingPage = () => {
         {/* ── Right: booking form ── */}
         <div className="flex flex-col gap-4 lg:w-[380px] lg:shrink-0">
           {/* Dates */}
-          <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+          <div className="relative rounded-xl border border-gray-200 bg-white p-5 shadow-sm" ref={calendarRef}>
             <h3 className="mb-4 font-semibold text-gray-900">날짜 선택</h3>
             <div className="flex flex-col gap-3">
               <div>
                 <p className="mb-1 text-sm text-gray-500">체크인</p>
-                <input
-                  type="date"
-                  min={today}
-                  value={checkIn}
-                  onChange={(e) => {
-                    setCheckIn(e.target.value);
-                    if (checkOut && e.target.value >= checkOut) setCheckOut('');
-                  }}
-                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none"
-                />
+                <button
+                  type="button"
+                  onClick={() => setShowCalendar((v) => !v)}
+                  className={`flex w-full items-center justify-between rounded-lg border px-3 py-2 text-sm ${checkIn ? 'text-gray-900' : 'text-gray-400'} ${showCalendar ? 'border-primary-500' : 'border-gray-200'} bg-white focus:outline-none`}
+                >
+                  <span>{checkIn || '체크인 날짜 선택'}</span>
+                  <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </button>
               </div>
               <div>
                 <p className="mb-1 text-sm text-gray-500">체크아웃</p>
-                <input
-                  type="date"
-                  min={checkIn || today}
-                  value={checkOut}
-                  onChange={(e) => setCheckOut(e.target.value)}
-                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none"
-                />
+                <button
+                  type="button"
+                  onClick={() => setShowCalendar((v) => !v)}
+                  className={`flex w-full items-center justify-between rounded-lg border px-3 py-2 text-sm ${checkOut ? 'text-gray-900' : 'text-gray-400'} ${showCalendar ? 'border-primary-500' : 'border-gray-200'} bg-white focus:outline-none`}
+                >
+                  <span>{checkOut || '체크아웃 날짜 선택'}</span>
+                  <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </button>
               </div>
             </div>
+
+            {showCalendar && (
+              <div className="absolute left-0 right-0 top-full z-20 mt-1 rounded-xl border border-gray-200 bg-white p-2 shadow-lg">
+                <DayPicker
+                  mode="range"
+                  defaultMonth={checkIn ? new Date(checkIn + 'T00:00:00') : new Date()}
+                  selected={{
+                    from: checkIn ? new Date(checkIn + 'T00:00:00') : undefined,
+                    to: checkOut ? new Date(checkOut + 'T00:00:00') : undefined,
+                  }}
+                  onSelect={(range: DateRange | undefined) => {
+                    const from = range?.from;
+                    const to = range?.to;
+                    setCheckIn(from ? formatDateToISOstring(from) : '');
+                    setCheckOut(to ? formatDateToISOstring(to) : '');
+                    if (from && to) setShowCalendar(false);
+                  }}
+                  disabled={{ before: new Date(today + 'T00:00:00') }}
+                  numberOfMonths={1}
+                />
+              </div>
+            )}
           </div>
 
           {/* Participants */}
@@ -594,6 +634,19 @@ const BookingPage = () => {
                 <div className="flex justify-between">
                   <span className="text-gray-500">닉네임</span>
                   <span className="font-medium text-gray-900">{customer.nickname}</span>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-gray-500">
+                    휴대폰 번호 <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="tel"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value.replace(/[^0-9]/g, ''))}
+                    placeholder="01012345678"
+                    maxLength={11}
+                    className="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none"
+                  />
                 </div>
               </div>
             ) : (

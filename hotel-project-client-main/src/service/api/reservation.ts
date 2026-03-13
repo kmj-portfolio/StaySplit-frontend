@@ -37,3 +37,9 @@ export const getReservationInfo = async (params?: ReservationParams) => {
   );
   return response;
 };
+
+export const confirmReservation = async (reservationId: number) => {
+  return await handleApiReqeust<{ reservationId: number; reservationNumber: string }>(() =>
+    client.post(`/api/reservations/confirmation/${reservationId}`),
+  );
+};

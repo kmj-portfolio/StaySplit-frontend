@@ -3,8 +3,6 @@ import TabNavigation from '@/component/common/Tab/TabNavigation';
 import ReservationCard from '@/component/mypage/reservation/ReservationCard';
 import { getReservationInfo } from '@/service/api/reservation';
 import { useReservationStore } from '@/stores/useReservationStore';
-import PaymentPage from '../payment/PaymentDetail';
-import { usePaymentStore } from '@/stores/usePaymentStore';
 import type { ReservationStatus } from '@/types/ReservationType';
 
 type TabLabel = '전체' | '결제 대기' | '예약 완료' | '이용 완료' | '예약 취소';
@@ -18,36 +16,27 @@ const TAB_STATUS_MAP: Record<TabLabel, ReservationStatus | undefined> = {
 };
 
 const ReservationPage = () => {
-  const { paymentModal, togglePayment } = usePaymentStore();
   const { reservations, setReservations } = useReservationStore();
   const [activeTab, setActiveTab] = useState<TabLabel>('전체');
 
   const tabs: TabLabel[] = ['전체', '결제 대기', '예약 완료', '이용 완료', '예약 취소'];
+
+  const fetchData = useCallback(async () => {
+    const status = TAB_STATUS_MAP[activeTab];
+    const response = await getReservationInfo({ status });
+    setReservations(response);
+  }, [activeTab, setReservations]);
 
   const handleTabChange = useCallback((tab: string) => {
     setActiveTab(tab as TabLabel);
   }, []);
 
   useEffect(() => {
-    const fetchData = async () => {
-      const status = TAB_STATUS_MAP[activeTab];
-      const response = await getReservationInfo({ status });
-      setReservations(response);
-    };
     fetchData();
-  }, [activeTab, setReservations]);
+  }, [fetchData]);
 
   return (
     <>
-      {paymentModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center"
-          onClick={togglePayment}
-        >
-          <div className="absolute inset-0 bg-gray-600 opacity-50" />
-          <PaymentPage />
-        </div>
-      )}
       <div className="mb-8 flex items-center justify-between">
         <h1 className="text-3xl font-bold text-gray-800">예약 내역</h1>
       </div>
@@ -58,7 +47,11 @@ const ReservationPage = () => {
           <p className="py-12 text-center text-gray-400">예약 내역이 없습니다.</p>
         ) : (
           reservations.map((booking) => (
-            <ReservationCard booking={booking} key={booking.reservationId} />
+            <ReservationCard
+              booking={booking}
+              key={booking.reservationId}
+              onPaymentComplete={fetchData}
+            />
           ))
         )}
       </div>
