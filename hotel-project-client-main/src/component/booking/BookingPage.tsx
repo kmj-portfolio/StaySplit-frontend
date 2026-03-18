@@ -6,9 +6,9 @@ import type { DateRange } from 'react-day-picker';
 import 'react-day-picker/style.css';
 
 import { getCustomerDetails, getUsernameAutocomplete } from '@/service/api/auth';
-import { createReservation, confirmReservation } from '@/service/api/reservation';
-import { verifyPayment } from '@/service/api/payment';
-import { formatNumberWithComma, formatDateToISOstring } from '@/utils/format/formatUtil';
+import { createReservation } from '@/service/api/reservation';
+import { createPayment, verifyPayment } from '@/service/api/payment';
+import { formatNumberWithComma, formatDateToISOstring, formatPhoneNumber } from '@/utils/format/formatUtil';
 
 import type { RoomInfo } from '@/types/room/room';
 import type { CustomerDetails } from '@/types/user';
@@ -38,8 +38,14 @@ const BookingPage = () => {
   const state = location.state as BookingState | null;
 
   const [customer, setCustomer] = useState<CustomerDetails>();
-  const [checkIn, setCheckIn] = useState(state?.checkIn ?? '');
-  const [checkOut, setCheckOut] = useState(state?.checkOut ?? '');
+  const defaultCheckIn = state?.checkIn || today;
+  const [checkIn, setCheckIn] = useState(defaultCheckIn);
+  const [checkOut, setCheckOut] = useState(() => {
+    if (state?.checkOut) return state.checkOut;
+    const d = new Date(defaultCheckIn + 'T00:00:00');
+    d.setDate(d.getDate() + 1);
+    return formatDateToISOstring(d);
+  });
   const [invitedEmails, setInvitedEmails] = useState<string[]>([]);
   const [emailInput, setEmailInput] = useState('');
   const [suggestions, setSuggestions] = useState<string[]>([]);
@@ -48,7 +54,6 @@ const BookingPage = () => {
   const [paymentMode, setPaymentMode] = useState<PaymentMode>('solo');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string>();
-  const [phoneNumber, setPhoneNumber] = useState('');
   const [participantError, setParticipantError] = useState<string>();
   const [autocompleteError, setAutocompleteError] = useState<string>();
   const [confirmation, setConfirmation] = useState<ReservationResult>();
@@ -179,7 +184,16 @@ const BookingPage = () => {
       return;
     }
 
-    const paymentId = `payment-${reservationNumber}-${Date.now()}`;
+    let paymentId: string;
+    try {
+      const payment = await createPayment(reservationId);
+      paymentId = payment.paymentId;
+    } catch (err) {
+      setError(String(err));
+      setSubmitting(false);
+      return;
+    }
+
     const response = await PortOne.requestPayment({
       storeId,
       channelKey,
@@ -191,7 +205,7 @@ const BookingPage = () => {
       customer: {
         fullName: customer?.name,
         email: customer?.email,
-        phoneNumber: phoneNumber || undefined,
+        phoneNumber: customer?.phoneNumber || undefined,
       },
     });
 
@@ -202,8 +216,7 @@ const BookingPage = () => {
     }
 
     try {
-      await verifyPayment({ portOnePaymentId: paymentId, reservationId });
-      await confirmReservation(reservationId);
+      await verifyPayment({ paymentId, reservationId });
       navigate('/mypage/bookings');
     } catch (err) {
       setError(String(err));
@@ -224,10 +237,6 @@ const BookingPage = () => {
       setError('나누어 결제하려면 참여자를 한 명 이상 추가해 주세요.');
       return;
     }
-    if (!phoneNumber || phoneNumber.length < 10) {
-      setError('휴대폰 번호를 올바르게 입력해 주세요.');
-      return;
-    }
 
     setSubmitting(true);
     setError(undefined);
@@ -237,7 +246,7 @@ const BookingPage = () => {
         roomsAndQuantities: [{ roomId: room.roomId, quantity: 1 }],
         checkInDate: checkIn,
         checkOutDate: checkOut,
-        invitedEmails,
+        nicknames: invitedEmails,
         isSplitPayment: paymentMode === 'split',
       });
 
@@ -300,9 +309,9 @@ const BookingPage = () => {
               <span className="text-gray-500">총 요금</span>
               <span className="font-semibold text-gray-900">₩{formatNumberWithComma(totalPrice)}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="font-semibold text-primary-600">내가 낼 금액</span>
-              <span className="font-bold text-primary-600">₩{formatNumberWithComma(myPrice)}</span>
+            <div className="flex justify-between rounded-lg bg-sky-100 px-3 py-2">
+              <span className="font-semibold text-red-500">내가 낼 금액</span>
+              <span className="font-bold text-red-500">₩{formatNumberWithComma(myPrice)}</span>
             </div>
           </div>
 
@@ -455,8 +464,15 @@ const BookingPage = () => {
                     const from = range?.from;
                     const to = range?.to;
                     setCheckIn(from ? formatDateToISOstring(from) : '');
-                    setCheckOut(to ? formatDateToISOstring(to) : '');
-                    if (from && to) setShowCalendar(false);
+                    if (from && !to) {
+                      const nextDay = new Date(from);
+                      nextDay.setDate(nextDay.getDate() + 1);
+                      setCheckOut(formatDateToISOstring(nextDay));
+                      setShowCalendar(false);
+                    } else {
+                      setCheckOut(to ? formatDateToISOstring(to) : '');
+                      if (from && to) setShowCalendar(false);
+                    }
                   }}
                   disabled={{ before: new Date(today + 'T00:00:00') }}
                   numberOfMonths={1}
@@ -635,18 +651,11 @@ const BookingPage = () => {
                   <span className="text-gray-500">닉네임</span>
                   <span className="font-medium text-gray-900">{customer.nickname}</span>
                 </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-gray-500">
-                    휴대폰 번호 <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="tel"
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value.replace(/[^0-9]/g, ''))}
-                    placeholder="01012345678"
-                    maxLength={11}
-                    className="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none"
-                  />
+                <div className="flex justify-between">
+                  <span className="text-gray-500">휴대폰 번호</span>
+                  <span className="font-medium text-gray-900">
+                    {customer.phoneNumber ? formatPhoneNumber(customer.phoneNumber) : '-'}
+                  </span>
                 </div>
               </div>
             ) : (
@@ -682,9 +691,9 @@ const BookingPage = () => {
                   {nights > 0 ? `₩${formatNumberWithComma(totalPrice)}` : '-'}
                 </span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="font-semibold text-primary-500">내가 낼 금액</span>
-                <span className="text-xl font-bold text-primary-500">
+              <div className="flex items-center justify-between rounded-lg bg-sky-100 px-3 py-2">
+                <span className="font-semibold text-red-500">내가 낼 금액</span>
+                <span className="text-xl font-bold text-red-500">
                   {nights > 0 ? `₩${formatNumberWithComma(myPrice)}` : '-'}
                 </span>
               </div>
