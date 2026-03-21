@@ -1,9 +1,6 @@
 import { Link } from 'react-router-dom';
-
-import HeartIcon from '../common/icons/HeartIcon';
-
-import { RatingStars } from './RatingStars';
 import { formatNumberWithComma } from '@/utils/format/formatUtil';
+import { MapPin, Star } from 'lucide-react';
 
 interface HotelCardProps {
   hotelId: number;
@@ -19,6 +16,14 @@ interface HotelCardProps {
   checkOut?: string;
 }
 
+const ratingLabel = (rating: number) => {
+  if (rating >= 4.5) return '매우 우수';
+  if (rating >= 4.0) return '우수';
+  if (rating >= 3.5) return '좋음';
+  if (rating >= 3.0) return '보통';
+  return '';
+};
+
 const HotelCard = ({
   hotelId,
   starLevel,
@@ -27,48 +32,69 @@ const HotelCard = ({
   rating,
   reviewCount,
   mainImageUrl,
-  liked,
-  handleChangeLike,
   checkIn,
   checkOut,
 }: HotelCardProps) => {
-  const imageUrl = mainImageUrl;
-
   return (
     <Link to={`/hotels/${hotelId}`} state={{ checkIn, checkOut }}>
       <div
         aria-label={name}
-        className="hover:border-primary-200 relative flex w-full gap-4 rounded-2xl border border-gray-200 p-4 transition-colors lg:max-w-[300px] lg:flex-col"
+        className="group flex w-full gap-4 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-gray-100 transition-all hover:shadow-md hover:ring-gray-200"
       >
-        <div className="bg-primary-700 h-[120px] w-[120px] shrink-0 overflow-hidden rounded-2xl lg:h-[200px] lg:w-full">
-          {imageUrl && (
-            <img src={imageUrl} alt={name} className="h-full w-full object-cover" />
+        {/* 이미지 */}
+        <div className="relative h-[180px] w-[300px] shrink-0 overflow-hidden rounded-xl bg-gray-100 sm:h-[260px] sm:w-[300px]">
+          {mainImageUrl ? (
+            <img
+              src={mainImageUrl}
+              alt={name}
+              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+          ) : (
+            <div className="h-full w-full bg-gray-200" />
           )}
         </div>
-        <div className="w-full">
-          <div className="flex items-center justify-between">
-            <p className="text-primary-700 text-xs lg:text-sm">{`${starLevel}성급`}</p>
-            <HeartIcon
-              like={liked}
-              onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                handleChangeLike();
-              }}
-              className="z-999 lg:absolute lg:top-8 lg:right-8"
-            />
+
+        {/* 내용 */}
+        <div className="flex min-w-0 flex-1 flex-col justify-between py-1">
+          <div className="flex flex-col gap-1.5">
+            {/* 호텔명 */}
+            <h3 className="text-2xl font-bold text-gray-900 leading-snug">{name}</h3>
+
+            {/* 성급 별 아이콘 */}
+            <div className="flex items-center gap-0.5">
+              {Array.from({ length: starLevel }).map((_, i) => (
+                <Star key={i} size={14} fill="#FBBF24" stroke="#FBBF24" />
+              ))}
+            </div>
+
+            {/* 주소 */}
+            <div className="flex items-center gap-1 text-gray-500">
+              <MapPin size={13} className="shrink-0" />
+              <p className="truncate text-sm">{address}</p>
+            </div>
           </div>
 
-          <h3 className="font-bold lg:text-lg">{name}</h3>
+          {/* 평점 + 가격 */}
+          <div className="flex items-end justify-between">
+            {/* 평점 배지 */}
+            <div className="flex items-center gap-2">
+              <span className="bg-primary-600 rounded-lg rounded-tl-none px-2 py-1 text-sm font-bold text-white">
+                {rating.toFixed(1)}
+              </span>
+              <div className="flex flex-col leading-tight">
+                <span className="text-sm font-semibold text-gray-700">{ratingLabel(rating)}</span>
+                <span className="text-xs text-gray-400">후기 {reviewCount > 999 ? '999+' : reviewCount}개</span>
+              </div>
+            </div>
 
-          <p className="mb-0.5 text-sm font-light text-gray-500">{address}</p>
-
-          <div className="mb-2 flex items-center gap-1">
-            <RatingStars rating={rating} />
-            <span className="text-xs text-gray-500">{`(${reviewCount}+)`}</span>
+            {/* 가격 */}
+            <div className="text-right">
+              <p className="text-xs text-gray-400">1박 기준</p>
+              <p className="text-xl font-bold text-gray-900">
+                ₩{formatNumberWithComma(130000)}
+              </p>
+            </div>
           </div>
-
-          <div className="text-end text-gray-700 lg:text-lg">{`₩${formatNumberWithComma(130000)}`}</div>
         </div>
       </div>
     </Link>
