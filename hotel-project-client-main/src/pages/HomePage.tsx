@@ -1,36 +1,23 @@
 import RadioInput from '@/component/common/input/RadioInput';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
-import HotelCard from '@/component/card/HotelCard';
+import HotelSimpleCard from '@/component/card/HotelSimpleCard';
 import SearchForm from '@/component/form/SearchForm';
 
-import useGetInfiniteAllHotels from '@/hooks/queries/hotels/useGetInfiniteHotels';
+import useGetPopularHotels from '@/hooks/queries/hotels/useGetPopularHotels';
 import CardSkeleton from '@/component/common/card/ui/CardSkeleton';
-import useObserver from '@/hooks/useObserver';
 
 const CategoryGroup = [
-  {
-    id: 'seoul',
-    label: '서울',
-  },
-  {
-    id: 'incheon',
-    label: '인천',
-  },
+  { id: 'seoul', label: '서울' },
+  { id: 'busan', label: '부산' },
+  { id: 'jeju', label: '제주' },
 ];
 
 const HomePage = () => {
   const [radio, setRadio] = useState('seoul');
-  const [like, setLike] = useState(false);
 
-  const { data, isLoading, hasNextPage, fetchNextPage, isFetching } = useGetInfiniteAllHotels();
-  const { ref, isView } = useObserver();
-
-  useEffect(() => {
-    if (isView && hasNextPage) {
-      fetchNextPage();
-    }
-  }, [isView, fetchNextPage, hasNextPage]);
+  const { data, isLoading } = useGetPopularHotels(radio);
+  const hotels = data?.content ?? [];
 
   return (
     <section className="w-full px-4">
@@ -47,7 +34,7 @@ const HomePage = () => {
       </div>
 
       <div className="w-full">
-        <h3 className="mb-2 font-bold md:text-lg">지금 인기가 가장 많은 숙소</h3>
+        <h3 className="mb-2 font-bold md:text-lg">지금 가장 인기가 많은 숙소</h3>
         <ul
           aria-label="지역 카테고리"
           className="mb-4 flex flex-nowrap items-center gap-2 overflow-x-scroll"
@@ -65,22 +52,26 @@ const HomePage = () => {
           ))}
         </ul>
         <ul className="flex flex-col gap-4 lg:grid lg:grid-cols-5">
+          {isLoading &&
+            Array.from({ length: 5 }).map((_, i) => (
+              <li key={i}>
+                <CardSkeleton />
+              </li>
+            ))}
           {!isLoading &&
-            data?.pages
-              .flatMap((el) => el.content)
-              .map((hotel) => (
-                <li key={hotel.hotelId} className="w-full">
-                  <HotelCard
-                    {...hotel}
-                    liked={like}
-                    handleChangeLike={() => setLike((prev) => !prev)}
-                  />
-                </li>
-              ))}
-          {isFetching && <CardSkeleton />}
+            hotels.map((hotel) => (
+              <li key={hotel.hotelId} className="w-full">
+                <HotelSimpleCard
+                  hotelId={hotel.hotelId}
+                  name={hotel.name}
+                  address={hotel.address}
+                  mainImageUrl={hotel.mainImageUrl}
+                  starLevel={hotel.starLevel}
+                  minPrice={hotel.minPrice}
+                />
+              </li>
+            ))}
         </ul>
-        {/* Observer */}
-        <div className="min-h-[1px] w-full" ref={ref} />
       </div>
     </section>
   );

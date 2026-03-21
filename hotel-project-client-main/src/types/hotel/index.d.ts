@@ -64,4 +64,5 @@ export interface HotelItem {
   rating: number;
   reviewCount: number;
   starLevel: number;
+  minPrice: number;
 }
