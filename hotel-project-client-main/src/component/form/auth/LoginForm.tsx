@@ -5,7 +5,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 
 import { LoginSchema, type LoginType } from '@/schema/AuthSchema';
 
-import Kakao from '../../../assets/icons/Kakao.svg';
 import Google from '../../../assets/icons/Google.svg';
 
 import RHFInput from '../../common/input/RHFInput';
@@ -32,13 +31,8 @@ const LoginFeilds = [
 
 const oAuthLogin = [
   {
-    id: 'kakao',
-    path: import.meta.env.VITE_KAKAO_AUTH_URL,
-    imageSrc: Kakao,
-  },
-  {
     id: 'google',
-    path: `${import.meta.env.VITE_GOOGLE_AUTH_URL}?client_id=${import.meta.env.VITE_GOOGLE_CLIENT_ID}&redirect_uri=${import.meta.env.VITE_GOOGLE_REDIRECT_URI}&response_type=code&scope=openid%20email%20profile&state=google`,
+    path: `${import.meta.env.VITE_GOOGLE_AUTH_URL}?client_id=${import.meta.env.VITE_GOOGLE_CLIENT_ID}&redirect_uri=${import.meta.env.VITE_GOOGLE_REDIRECT_URI}&response_type=code&scope=openid%20email%20profile`,
     imageSrc: Google,
   },
 ];

@@ -56,6 +56,10 @@ export const router = createBrowserRouter([
         element: <LoginFallbackPage />,
       },
       {
+        path: '/oauth/google/callback',
+        element: <LoginFallbackPage identifier="google" />,
+      },
+      {
         path: 'hotels',
         element: <HotelsPage />,
       },

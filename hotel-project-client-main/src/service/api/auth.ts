@@ -2,10 +2,8 @@ import client, { setAccessToken } from '@/service/instance/client';
 
 import handleApiReqeust from './handleApiReqeust';
 
-import type { UserRole, UserInfo, WarnResponse, UserStatus, LoginResponse, CustomerDetails, ProviderProfile } from '@/types/user';
+import type { UserRole, UserInfo, UserStatus, LoginResponse, CustomerDetails, ProviderProfile, GoogleLoginResponse } from '@/types/user';
 import type { GeneralRegisterType, ProviderRegisterType, LoginType, SocialRegisterType, ChangePasswordType } from '@/schema/AuthSchema';
-
-type oAuthIdentity = 'kakao' | 'google';
 
 const getSignUpApiUrl = (role: UserRole) => {
   if (role === 'ROLE_CUSTOMER') {
@@ -24,13 +22,12 @@ export const GeneralSignup = async (role: UserRole, data: GeneralRegisterType | 
   return response;
 };
 
-export const SocialSignup = async (data: SocialRegisterType, accountType: string) => {
-  //FIXME: 서버의 getGoolgleProfile에서 유저 정보 가져오면 수정되어야함.
+export const SocialSignup = async (data: SocialRegisterType) => {
   const phoneNumber = 'phoneNumber' in data && data.phoneNumber
     ? data.phoneNumber.replace(/-/g, '')
     : undefined;
-  const response = await handleApiReqeust<UserInfo>(() =>
-    client.post('/api/customers/oauth/signup', { ...data, phoneNumber, accountType }),
+  const response = await handleApiReqeust<LoginResponse>(() =>
+    client.post('/api/oauth/signup', { ...data, phoneNumber }),
   );
 
   return response;
@@ -81,10 +78,15 @@ export const getUsernameAutocomplete = async (prefix: string): Promise<string[]>
   return response.data;
 };
 
-export const oAuthLogin = async (identifier: oAuthIdentity, code: string) => {
-  const response = await handleApiReqeust<WarnResponse>(() =>
-    client.post(`/api/customers/${identifier}/login`, { code }),
+// POST /api/oauth/google/login
+// 기존 사용자: { needsSignup: false, accessToken, role }
+// 신규 사용자: { needsSignup: true, socialId, email, name }
+export const googleOAuthLogin = async (code: string): Promise<GoogleLoginResponse> => {
+  const result = await handleApiReqeust<GoogleLoginResponse>(() =>
+    client.post('/api/oauth/google/login', { code }),
   );
-
-  return response;
+  if (!result.needsSignup && result.accessToken) {
+    setAccessToken(result.accessToken);
+  }
+  return result;
 };

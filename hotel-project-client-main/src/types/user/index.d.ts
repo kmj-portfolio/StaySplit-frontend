@@ -37,3 +37,12 @@ export interface WarnResponse {
   code: string;
   data: string;
 }
+
+export interface GoogleLoginResponse {
+  needsSignup: boolean;
+  accessToken: string | null;
+  role: string | null;
+  socialId: string | null;
+  email: string | null;
+  name: string | null;
+}
