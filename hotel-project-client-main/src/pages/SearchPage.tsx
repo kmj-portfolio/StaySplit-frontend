@@ -15,7 +15,7 @@ const SearchPage = () => {
     useRouteLoaderData<SearchTerm>('search')!;
 
   const [filter, setFilter] = useState<FilterState>({
-    numStar: 0,
+    numStar: [],
     minPrice: 0,
     maxPrice: 999999999,
   });

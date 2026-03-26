@@ -13,7 +13,7 @@ export interface HotelSearchBody {
   numGuest: number;
   minPrice: number;
   maxPrice: number;
-  numStar: number;
+  numStar: number[];
 }
 
 export const getSearchHotels = async (body: HotelSearchBody, page = 0, size = 10) => {

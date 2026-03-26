@@ -34,7 +34,7 @@ const useGetPopularHotels = (region: string) => {
           numGuest: 2,
           minPrice: 0,
           maxPrice: 999999999,
-          numStar: 0,
+          numStar: [],
         },
         0,
         5,
