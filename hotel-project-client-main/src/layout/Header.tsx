@@ -21,6 +21,7 @@ const Header = () => {
 
   const [modal, setModal] = useState<boolean>(false);
   const [formError, setFormError] = useState<string>();
+  const [returnPath, setReturnPath] = useState<string>('/');
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -31,12 +32,16 @@ const Header = () => {
 
   useEffect(() => {
     if (loginModalOpen) {
+      setReturnPath(location.pathname !== '/error' ? location.pathname : '/');
       setModal(true);
       setLoginModalOpen(false);
     }
-  }, [loginModalOpen, setLoginModalOpen]);
+  }, [loginModalOpen, setLoginModalOpen, location.pathname]);
 
   const handleToggleModal = () => {
+    if (!modal) {
+      setReturnPath(location.pathname !== '/error' ? location.pathname : '/');
+    }
     setModal((prev) => !prev);
   };
 
@@ -52,7 +57,7 @@ const Header = () => {
         setUserNickName(details.nickname);
       }
       setModal(false);
-      navigate(role === 'ROLE_PROVIDER' ? '/mypage/hotel' : '/');
+      navigate(role === 'ROLE_PROVIDER' ? '/mypage/hotel' : returnPath);
     } catch (err) {
       setFormError(err as string);
     }

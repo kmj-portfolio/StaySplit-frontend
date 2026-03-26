@@ -25,7 +25,6 @@ export interface PaymentListResponse {
 
 export interface VerifyPaymentRequest {
   paymentId: string;
-  reservationId: number;
 }
 
 export interface CancelPaymentRequest {

@@ -21,7 +21,7 @@ export const getMyPayments = async (page = 0, size = 20) => {
 
 export const verifyPayment = async (data: VerifyPaymentRequest) => {
   return await handleApiReqeust<PaymentResponse>(() =>
-    client.post('/api/payments/verify', data),
+    client.post('/api/payments/verifications', data),
   );
 };
 
