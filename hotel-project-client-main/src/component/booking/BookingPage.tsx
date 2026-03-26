@@ -216,8 +216,8 @@ const BookingPage = () => {
     }
 
     try {
-      await verifyPayment({ paymentId, reservationId });
-      navigate('/mypage/bookings');
+      await verifyPayment({ paymentId });
+      navigate(`/mypage/bookings/${reservationId}`);
     } catch (err) {
       setError(String(err));
       setSubmitting(false);

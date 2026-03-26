@@ -43,7 +43,7 @@ const HotelImage = memo(({ image, hotelName }: HotelImageProps) => (
 
 HotelImage.displayName = 'HotelImage';
 
-const ReservationCard = memo(({ booking, onPaymentComplete }: ReservationCardProps) => {
+const ReservationCard = memo(({ booking }: ReservationCardProps) => {
   const navigate = useNavigate();
   const [paying, setPaying] = useState(false);
   const [payError, setPayError] = useState<string>();
@@ -93,8 +93,8 @@ const ReservationCard = memo(({ booking, onPaymentComplete }: ReservationCardPro
         return;
       }
 
-      await verifyPayment({ paymentId, reservationId: booking.reservationId });
-      onPaymentComplete?.();
+      await verifyPayment({ paymentId });
+      navigate(`/mypage/bookings/${booking.reservationId}`);
     } catch (err) {
       setPayError(String(err));
     } finally {
