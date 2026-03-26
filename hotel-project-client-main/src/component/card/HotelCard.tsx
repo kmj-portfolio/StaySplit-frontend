@@ -10,6 +10,7 @@ interface HotelCardProps {
   rating: number;
   reviewCount: number;
   mainImageUrl?: string;
+  minPrice: number;
   liked: boolean;
   handleChangeLike: () => void;
   checkIn?: string;
@@ -32,6 +33,7 @@ const HotelCard = ({
   rating,
   reviewCount,
   mainImageUrl,
+  minPrice,
   checkIn,
   checkOut,
 }: HotelCardProps) => {
@@ -91,7 +93,7 @@ const HotelCard = ({
             <div className="text-right">
               <p className="text-xs text-gray-400">1박 기준</p>
               <p className="text-xl font-bold text-gray-900">
-                ₩{formatNumberWithComma(130000)}
+                ₩{formatNumberWithComma(minPrice)}
               </p>
             </div>
           </div>

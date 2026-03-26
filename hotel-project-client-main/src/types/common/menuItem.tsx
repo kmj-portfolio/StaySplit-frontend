@@ -21,12 +21,14 @@ export const accountMenuItems = [
 
 export const providerMenuItems = [
   { name: '호텔 관리', href: '/mypage/hotel' },
+  { name: '예약 관리', href: '/mypage/reservations' },
   { name: '내 정보', href: '/mypage/settings' },
   { name: '고객센터', href: '/mypage/support' },
 ];
 
 export const providerProfileMenuItems = [
   { label: '호텔 관리', href: '/mypage/hotel' },
+  { label: '예약 관리', href: '/mypage/reservations' },
   { label: '내 정보', href: '/mypage/settings' },
   { label: '고객센터', href: '/mypage/support' },
 ];

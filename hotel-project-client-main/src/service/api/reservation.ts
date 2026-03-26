@@ -1,4 +1,10 @@
-import type { ReservationDetail, ReservationResponse, ReservationStatus } from '@/types/ReservationType';
+import type {
+  ReservationDetail,
+  ReservationResponse,
+  ReservationStatus,
+  ProviderReservationSearchCondition,
+  ProviderReservationResponse,
+} from '@/types/ReservationType';
 import client from '../instance/client';
 import handleApiReqeust from './handleApiReqeust';
 
@@ -80,5 +86,17 @@ export const confirmReservation = async (reservationId: number) => {
 export const cancelReservation = async (reservationId: number) => {
   return await handleApiReqeust<string>(() =>
     client.put(`/api/reservations/${reservationId}`),
+  );
+};
+
+export const getProviderReservations = async (
+  conditions: ProviderReservationSearchCondition = {},
+  page = 0,
+  size = 20,
+) => {
+  return await handleApiReqeust<ProviderReservationResponse>(() =>
+    client.post('/api/providers/reservations', conditions, {
+      params: { page, size },
+    }),
   );
 };

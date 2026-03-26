@@ -20,6 +20,7 @@ import SupportPage from '@/component/mypage/support/SupportPage';
 import LikePage from '@/component/mypage/like/LikePage';
 import ReviewsPage from '@/component/mypage/review/ReviewsPage';
 import HotelManagePage from '@/component/mypage/hotel/HotelManagePage';
+import ProviderReservationPage from '@/component/mypage/hotel/ProviderReservationPage';
 import BookingPage from '@/component/booking/BookingPage';
 import MypageIndex from './MypageIndex';
 
@@ -144,6 +145,14 @@ export const router = createBrowserRouter([
             element: (
               <ProtectedRoute>
                 <HotelManagePage />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'reservations',
+            element: (
+              <ProtectedRoute>
+                <ProviderReservationPage />
               </ProtectedRoute>
             ),
           },

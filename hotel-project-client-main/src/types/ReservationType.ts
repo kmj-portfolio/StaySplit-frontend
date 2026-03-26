@@ -93,6 +93,48 @@ export interface ReservationResponse {
 }
 
 // =========================================
+// Provider 예약 조회 인터페이스
+// =========================================
+
+export interface ProviderReservationSearchCondition {
+  reservationNumber?: string;
+  reservationStatus?: ReservationStatus;
+  checkInStart?: string;
+  checkInEnd?: string;
+  checkOutStart?: string;
+  checkOutEnd?: string;
+  createdAtStart?: string;
+  createdAtEnd?: string;
+  guestEmail?: string;
+  guestName?: string;
+  roomType?: string;
+}
+
+export interface ProviderReservation {
+  reservationId: number;
+  reservationNumber: string;
+  nights: number;
+  checkInDate: string;
+  checkOutDate: string;
+  totalPrice: number;
+  reservationStatus: ReservationStatus;
+  participantNames: string[];
+  numberOfParticipants: number;
+}
+
+export interface ProviderReservationResponse {
+  content: ProviderReservation[];
+  totalElements: number;
+  totalPages: number;
+  first: boolean;
+  last: boolean;
+  size: number;
+  number: number;
+  numberOfElements: number;
+  empty: boolean;
+}
+
+// =========================================
 // 서브 컴포넌트 Props 인터페이스
 // =========================================
 
