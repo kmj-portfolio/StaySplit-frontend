@@ -51,7 +51,7 @@ const Header = () => {
       setUserRole(role);
       if (role === 'ROLE_PROVIDER') {
         const profile = await getProviderProfile();
-        setUserNickName(profile.hotelName);
+        setUserNickName(profile.hotelName ?? '');
       } else {
         const details = await getCustomerDetails();
         setUserNickName(details.nickname);
