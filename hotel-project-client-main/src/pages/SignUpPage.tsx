@@ -4,6 +4,7 @@ import { GeneralSignup } from '@/service/api/auth';
 import type { UserRole } from '@/types/user';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Google from '@/assets/icons/Google.svg';
 
 const getButtonStyle = (currentState: boolean) => {
   const baseStyle = 'w-full cursor-pointer rounded-full py-2 transition-colors ';
@@ -63,6 +64,25 @@ const SignUpPage = () => {
           </button>
         </div>
         <GeneralRegisterForm key={role} role={role} onSubmit={handleSubmit} />
+
+        {role === 'ROLE_CUSTOMER' && (
+          <div className="mt-6">
+            <div className="border-gray-primary relative border-t">
+              <span className="bg-white absolute left-1/2 -translate-x-1/2 -translate-y-1/2 px-3 text-sm text-gray-500">
+                또는
+              </span>
+            </div>
+            <div className="mt-6 flex flex-col items-center gap-3">
+              <p className="text-sm text-gray-500">소셜 계정으로 간편 가입</p>
+              <a
+                href={`${import.meta.env.VITE_GOOGLE_AUTH_URL}?client_id=${import.meta.env.VITE_GOOGLE_CLIENT_ID}&redirect_uri=${import.meta.env.VITE_GOOGLE_REDIRECT_URI}&response_type=code&scope=openid%20email%20profile`}
+                aria-label="Google로 가입하기"
+              >
+                <img src={Google} alt="Google" className="size-12" />
+              </a>
+            </div>
+          </div>
+        )}
       </div>
     </section>
   );
