@@ -5,6 +5,7 @@ import { useEffect, useRef } from 'react';
 import useAuthStore from '@/stores/useAuthStore';
 import handleApiReqeust from '@/service/api/handleApiReqeust';
 import client, { setAccessToken } from '@/service/instance/client';
+import { getCustomerDetails, getProviderProfile } from '@/service/api/auth';
 import type { UserStatus, LoginResponse } from '@/types/user';
 import { useLocation } from 'react-router-dom';
 
@@ -24,16 +25,23 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         client.post('/api/auth/refresh'),
       );
       setAccessToken(response.accessToken);
-      // Only update role if the refresh endpoint explicitly returns one.
-      // The refresh endpoint may only return accessToken; role is already
-      // correctly stored in localStorage from the original login.
       if (response.role) {
         setUserRole(response.role);
       }
+      // Fetch nickname after token restore so MypageMenu always shows it
+      const currentRole = response.role ?? useAuthStore.getState().role;
+      try {
+        if (currentRole === 'ROLE_PROVIDER') {
+          const profile = await getProviderProfile();
+          setUserNickName(profile.hotelName ?? '');
+        } else if (currentRole === 'ROLE_CUSTOMER') {
+          const details = await getCustomerDetails();
+          setUserNickName(details.nickname);
+        }
+      } catch {
+        // nickname fetch failing shouldn't break auth restore
+      }
     } catch {
-      // Refresh failed — clear the in-memory token but keep the role from localStorage.
-      // ProtectedRoute will still render for users who were previously logged in.
-      // Individual API calls will re-attempt the refresh via the response interceptor.
       setAccessToken(null);
     } finally {
       setTokenRestored();

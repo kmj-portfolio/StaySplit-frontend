@@ -87,7 +87,7 @@ const SettingsPage = () => {
 
   return (
     <div className="max-w-lg">
-      <h1 className="mb-8 text-3xl font-bold text-gray-800">개인 설정</h1>
+      <h1 className="mb-8 text-3xl font-bold text-gray-800">내 정보</h1>
 
       {/* 내 정보 */}
       <section className="mb-8 rounded-xl border border-gray-200 bg-white p-6">

@@ -1,6 +1,6 @@
 import useAuthStore from '@/stores/useAuthStore';
 import { User } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { accountMenuItems, myInfoMenuItems, providerMenuItems } from '@/types/common/menuItem';
 
@@ -11,9 +11,6 @@ const MypageMenu = () => {
 
   const [isMyReservationOpen, setIsMyReservationOpen] = useState(true);
   const [isMyAccountOpen, setIsMyAccountOpen] = useState(true);
-  // 업데이트 알림 상태 관리
-  const [notifications, setNotifications] = useState(true);
-
   const handleMenuClick = (path: string) => {
     navigate(path);
   };
@@ -29,11 +26,6 @@ const MypageMenu = () => {
   const isActive = (path: string) => {
     return location.pathname === path;
   };
-
-  useEffect(() => {
-    //FIXME: 서버응답이 있을 때 만
-    setNotifications(true);
-  }, []);
 
   const isProvider = role === 'ROLE_PROVIDER';
 
@@ -132,16 +124,13 @@ const MypageMenu = () => {
                 <div
                   key={index}
                   onClick={() => handleMenuClick(item.href)}
-                  className={`flex cursor-pointer items-center justify-between rounded px-4 py-2.5 transition-colors ${
+                  className={`cursor-pointer rounded px-4 py-2.5 transition-colors ${
                     isActive(item.href)
                       ? 'border-l-4 border-blue-600 bg-blue-50 text-blue-600'
                       : 'text-gray-600 hover:bg-gray-100'
                   }`}
                 >
-                  <span>{item.name}</span>
-                  {item.name === '알림' && notifications && (
-                    <span className="rounded bg-red-500 px-2 py-1 text-xs text-white">NEW</span>
-                  )}
+                  {item.name}
                 </div>
               ))}
           </div>

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import useAuthStore from '@/stores/useAuthStore';
 
 let accessToken: string | null = null;
 let isRefreshing = false;
@@ -72,6 +73,7 @@ client.interceptors.response.use(
       } catch (refreshError) {
         processQueue(refreshError, null);
         setAccessToken(null);
+        useAuthStore.getState().setLogout();
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;

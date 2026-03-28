@@ -5,6 +5,7 @@ import type { SocialRegisterType } from '@/schema/AuthSchema';
 import useAuthStore from '@/stores/useAuthStore';
 import { googleOAuthLogin, SocialSignup } from '@/service/api/auth';
 import type { UserRole } from '@/types/user';
+import { getCustomerDetails, getProviderProfile } from '@/service/api/auth';
 
 import SignupForm from '@/component/form/auth/SocialRegisterForm';
 import Modal from '@/component/modal/Modal';
@@ -26,7 +27,7 @@ const LoginFallbackPage = ({ identifier: identifierProp }: Props) => {
   const [socialDefaults, setSocialDefaults] = useState<Partial<SocialRegisterType>>({});
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { setUserRole } = useAuthStore();
+  const { setUserRole, setUserNickName } = useAuthStore();
 
   const code = searchParams.get('code');
 
@@ -66,7 +67,19 @@ const LoginFallbackPage = ({ identifier: identifierProp }: Props) => {
           return;
         }
 
-        setUserRole(result.role as UserRole);
+        const role = result.role as UserRole;
+        setUserRole(role);
+        try {
+          if (role === 'ROLE_PROVIDER') {
+            const profile = await getProviderProfile();
+            setUserNickName(profile.hotelName ?? '');
+          } else {
+            const details = await getCustomerDetails();
+            setUserNickName(details.nickname);
+          }
+        } catch {
+          // nickname fetch 실패해도 로그인은 계속 진행
+        }
         navigate('/');
       } catch {
         setError(true);

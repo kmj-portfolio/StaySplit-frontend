@@ -50,6 +50,7 @@ export interface ReservationRoom {
 export interface Reservation {
   reservationId: number;
   reservationNumber: string;
+  hotelId: number;
   hotelName: string;
   hotelMainImageUrl: string;
   hotelAddress: string;
