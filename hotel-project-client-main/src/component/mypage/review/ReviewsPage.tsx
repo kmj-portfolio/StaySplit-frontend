@@ -77,12 +77,12 @@ const ReviewCard = ({
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-5">
       <div className="mb-3 flex items-start justify-between">
-        <div>
+        <div className="flex flex-col gap-2">
           <Link
             to={`/hotels/${review.hotelId}`}
-            className="text-sm font-medium text-blue-600 hover:underline"
+            className="text-xl font-semibold text-gray-900 hover:underline"
           >
-            호텔 #{review.hotelId}
+            {review.hotelName}
           </Link>
           {editing ? (
             <StarRating rating={rating} onChange={setRating} />
@@ -90,7 +90,11 @@ const ReviewCard = ({
             <StarRating rating={review.rating} />
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col items-end gap-2">
+          <span className="text-sm text-gray-400">
+            {new Date(review.createdAt).toLocaleDateString('ko-KR')}
+          </span>
+          <div className="flex items-center gap-2">
           {editing ? (
             <>
               <button
@@ -123,6 +127,7 @@ const ReviewCard = ({
               </button>
             </>
           )}
+          </div>
         </div>
       </div>
 
@@ -134,7 +139,7 @@ const ReviewCard = ({
           rows={4}
         />
       ) : (
-        <p className="text-sm leading-relaxed text-gray-700">{review.content}</p>
+        <p className="text-base leading-relaxed text-gray-700">{review.content}</p>
       )}
 
       {error && <p className="mt-2 text-xs text-red-500">{error}</p>}
@@ -153,8 +158,12 @@ const ReviewsPage = () => {
       try {
         const details = await getCustomerDetails();
         setCustomerId(details.id);
-        const page = await getCustomerReviews(details.id);
-        setReviews(page.content);
+        try {
+          const page = await getCustomerReviews(details.id);
+          setReviews(page.content ?? []);
+        } catch {
+          setReviews([]);
+        }
       } catch {
         setError('리뷰를 불러오지 못했습니다.');
       } finally {

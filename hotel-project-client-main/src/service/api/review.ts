@@ -12,6 +12,15 @@ export interface PageReview {
   empty: boolean;
 }
 
+export const createReview = async (data: {
+  customerId: number;
+  hotelId: number;
+  content: string;
+  rating: number;
+}) => {
+  return await handleApiReqeust<Review>(() => client.post('/api/reviews', data));
+};
+
 export const getCustomerReviews = async (customerId: number, page = 0, size = 20) => {
   return await handleApiReqeust<PageReview>(() =>
     client.get(`/api/reviews/customers/${customerId}`, { params: { page, size } }),
