@@ -14,7 +14,7 @@ const PaymentCard = () => {
         <Card.Content>
           <div className="mb-6 flex items-center justify-between">
             <span className="text-lg font-bold text-gray-900">총 예약 금액</span>
-            <span className="text-xl font-extrabold text-blue-600">
+            <span className="text-xl font-extrabold text-gray-900">
               {formatNumberToWon(reservations.totalPrice)}
             </span>
           </div>

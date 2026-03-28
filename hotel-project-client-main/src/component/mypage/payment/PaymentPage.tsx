@@ -37,7 +37,7 @@ const PaymentDetailModal: React.FC<{
       {payment && (
         <div className="flex-1 space-y-5 overflow-y-auto">
           <div className="flex items-center justify-between">
-            <span className="text-2xl font-bold text-gray-900">총 결제 금액</span>
+            <span className="text-2xl font-bold text-blue-600">총 결제 금액</span>
             <span className="text-2xl font-extrabold text-blue-600">
               {formatNumberToWon(payment.paymentAmount)}
             </span>
@@ -109,7 +109,7 @@ const PaymentItem: React.FC<{
         <span>결제일: {payment.paidAt ? payment.paidAt.slice(0, 10) : '-'}</span>
         {payment.payMethod && <span>• {payment.payMethod}</span>}
       </div>
-      <div className="text-xl font-bold text-blue-600">{formatNumberToWon(payment.paymentAmount)}</div>
+      <div className="text-xl font-bold text-gray-900">{formatNumberToWon(payment.paymentAmount)}</div>
     </div>
   </div>
 );

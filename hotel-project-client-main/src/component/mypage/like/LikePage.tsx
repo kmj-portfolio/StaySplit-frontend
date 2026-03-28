@@ -33,8 +33,8 @@ interface SelectedList {
 const stripQuotes = (name: string) => name.replace(/^"|"$/g, '');
 
 const StarRating = ({ value }: { value: number }) => (
-  <span className="flex items-center gap-1 text-sm text-amber-500">
-    <Star className="h-4 w-4 fill-amber-400 stroke-amber-400" />
+  <span className="flex items-center gap-1 text-base text-amber-500">
+    <Star className="h-5 w-5 fill-amber-400 stroke-amber-400" />
     {value.toFixed(1)}
   </span>
 );
@@ -464,28 +464,28 @@ const LikePage = () => {
                       {detail.hotels.content.map((hotel: HotelInList) => (
                         <div
                           key={hotel.hotelId}
-                          className="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-5"
+                          className="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-6"
                         >
-                          <div className="flex min-w-0 items-center gap-5">
+                          <div className="flex min-w-0 items-center gap-7">
                             {hotel.mainImageUrl ? (
                               <img
                                 src={hotel.mainImageUrl}
                                 alt={hotel.name}
-                                className="h-40 w-40 flex-shrink-0 rounded-xl object-cover"
+                                className="h-28 w-30 flex-shrink-0 rounded-xl object-cover"
                               />
                             ) : (
-                              <div className="flex h-40 w-40 flex-shrink-0 items-center justify-center rounded-xl bg-gray-100">
+                              <div className="flex h-24 w-24 flex-shrink-0 items-center justify-center rounded-xl bg-gray-100">
                                 <Hotel className="h-10 w-10 text-gray-400" />
                               </div>
                             )}
-                            <div className="min-w-0 space-y-1">
+                            <div className="min-w-0 space-y-1 text-left">
                               <Link
                                 to={`/hotels/${hotel.hotelId}`}
-                                className="block truncate text-base font-semibold text-blue-600 hover:underline"
+                                className="block truncate text-xl font-bold text-blue-600 hover:underline"
                               >
                                 {hotel.name}
                               </Link>
-                              <p className="truncate text-sm text-gray-500">{hotel.address}</p>
+                              <p className="truncate text-base text-gray-500">{hotel.address}</p>
                               <StarRating value={hotel.rating} />
                             </div>
                           </div>

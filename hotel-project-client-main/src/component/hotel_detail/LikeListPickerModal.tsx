@@ -14,6 +14,8 @@ interface Props {
   onClose: () => void;
 }
 
+const stripQuotes = (name: string) => name.replace(/^"|"$/g, '');
+
 const LikeListPickerModal = ({ hotelId, isOpen, onClose }: Props) => {
   const [lists, setLists] = useState<LikeListSummary[]>([]);
   const [loading, setLoading] = useState(false);
@@ -119,7 +121,7 @@ const LikeListPickerModal = ({ hotelId, isOpen, onClose }: Props) => {
                       <Hotel className="h-4 w-4 text-gray-400" />
                       <div>
                         <span className="block text-sm font-medium text-gray-800">
-                          {list.listName}
+                          {stripQuotes(list.listName)}
                         </span>
                         {list.numberOfParticipants > 0 && (
                           <span className="flex items-center gap-1 text-xs text-gray-400">
