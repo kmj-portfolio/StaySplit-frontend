@@ -17,6 +17,7 @@ const STATUS_CONFIG: Record<ReservationStatus, { text: string; bg: string; text_
 };
 
 const PAYMENT_STATUS_TEXT: Record<string, string> = {
+  READY: '결제 대기',
   PAID: '결제 완료',
   WAITING_PAYMENT: '결제 대기',
   CANCELLED: '결제 취소',
