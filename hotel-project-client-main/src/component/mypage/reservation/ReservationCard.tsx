@@ -12,6 +12,7 @@ import type {
 import { formatNumberToWon } from '@/utils/format/formatUtil';
 import { createPayment, verifyPayment } from '@/service/api/payment';
 import { getCustomerDetails } from '@/service/api/auth';
+import { getReservationDetail } from '@/service/api/reservation';
 import { createReview } from '@/service/api/review';
 import type { CustomerDetails } from '@/types/user';
 
@@ -66,6 +67,7 @@ const ReservationCard = memo(({ booking }: ReservationCardProps) => {
   const [paying, setPaying] = useState(false);
   const [payError, setPayError] = useState<string>();
   const [customer, setCustomer] = useState<CustomerDetails>();
+  const [myPaymentDone, setMyPaymentDone] = useState(false);
 
   // Review state
   const [showReview, setShowReview] = useState(false);
@@ -77,9 +79,18 @@ const ReservationCard = memo(({ booking }: ReservationCardProps) => {
 
   useEffect(() => {
     if (booking.reservationStatus === 'WAITING_PAYMENT') {
-      getCustomerDetails().then(setCustomer).catch(() => {});
+      Promise.all([
+        getCustomerDetails(),
+        getReservationDetail(booking.reservationId),
+      ])
+        .then(([customerDetails, detail]) => {
+          setCustomer(customerDetails);
+          const me = detail.participants.find((p) => p.email === customerDetails.email);
+          if (me?.paymentStatus === 'PAID') setMyPaymentDone(true);
+        })
+        .catch(() => {});
     }
-  }, [booking.reservationStatus]);
+  }, [booking.reservationStatus, booking.reservationId]);
 
   const handleOpenReview = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -215,7 +226,7 @@ const ReservationCard = memo(({ booking }: ReservationCardProps) => {
               </div>
             </div>
 
-            {booking.reservationStatus === 'WAITING_PAYMENT' && (
+            {booking.reservationStatus === 'WAITING_PAYMENT' && !myPaymentDone && (
               <div className="mt-4 border-t border-gray-100 pt-4 space-y-3">
                 {payError && <p className="text-sm text-red-500">{payError}</p>}
                 <button
