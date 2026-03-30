@@ -26,7 +26,7 @@ const HomePage = () => {
       <div className="relative">
         <div className="relative mb-20 hidden h-[250px] w-full flex-col items-center justify-center rounded-2xl bg-[url('/main-banner.png')] bg-cover bg-center bg-no-repeat text-white md:flex md:h-[300px]">
           <p className="font-bold md:text-2xl">당신의 여행을 더 스마트하게,</p>
-          <p className="text-sm md:text-lg">가장 합리적인 호텔 예약, StaySplit</p>
+          <p className="text-sm md:text-lg">가장 합리적인 호텔 예약, SplitStay</p>
         </div>
         <div className="mx-auto w-full md:absolute md:top-[82%] md:left-1/2 md:max-w-[1200px] md:-translate-x-1/2 md:px-8">
           <SearchForm />
