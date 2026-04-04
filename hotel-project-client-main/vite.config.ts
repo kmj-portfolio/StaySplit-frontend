@@ -19,6 +19,15 @@ export default defineConfig(({ mode }: ConfigEnv) => {
         '/api': {
           target: env.VITE_API_BASE_URL || 'http://localhost:8080',
           changeOrigin: true,
+          configure: (proxy) => {
+            proxy.on('proxyReq', (proxyReq, req) => {
+              if (req.headers['accept']?.includes('text/event-stream')) {
+                proxyReq.socket.setTimeout(0);
+                proxyReq.socket.setNoDelay(true);
+                proxyReq.socket.setKeepAlive(true, 0);
+              }
+            });
+          },
         },
       },
     },
